@@ -126,14 +126,14 @@ activate() {
 # fzf + delta: interactive file picker with syntax-highlighted diff preview
 fd() {
   local file
-  file=$(git diff --name-only 2>/dev/null | fzf --preview 'git diff -- {} | delta --width=${FZF_PREVIEW_COLUMNS:-80}' --preview-window=right:65%)
-  [[ -n "$file" ]] && git diff -- "$file" | delta
+  file=$( (git diff --name-only HEAD 2>/dev/null; git diff --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null) | sort -u | fzf --preview 'git diff HEAD -- {} | delta --width=${FZF_PREVIEW_COLUMNS:-80}' --preview-window=right:65%)
+  [[ -n "$file" ]] && git diff HEAD -- "$file" | delta
 }
 
 # fzf + difftastic: interactive file picker with structural diff preview
 fdd() {
   local file
-  file=$(git diff --name-only 2>/dev/null | fzf --preview 'difft <(git show HEAD:{}) {}' --preview-window=right:65%)
+  file=$( (git diff --name-only HEAD 2>/dev/null; git diff --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null) | sort -u | fzf --preview 'difft <(git show HEAD:{}) {}' --preview-window=right:65%)
   [[ -n "$file" ]] && difft <(git show HEAD:"$file") "$file"
 }
 

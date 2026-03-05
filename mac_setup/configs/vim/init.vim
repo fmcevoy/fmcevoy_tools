@@ -101,6 +101,7 @@ Plug 'dense-analysis/ale'
 Plug 'yetone/avante.nvim', { 'branch': 'main', 'do': 'make' }
 Plug 'MunifTanjim/nui.nvim'
 Plug 'stevearc/dressing.nvim'
+Plug 'coder/claudecode.nvim'
 
 " Utilities
 Plug 'akinsho/toggleterm.nvim'
@@ -254,6 +255,18 @@ if ok then
     open_mapping = [[<C-\>]],
     direction = 'horizontal',
     size = 15,
+  })
+end
+EOF
+
+" ---------------------------------------------------------------------------
+" Claude Code integration
+" ---------------------------------------------------------------------------
+lua << EOF
+local ok, claudecode = pcall(require, 'claudecode')
+if ok then
+  claudecode.setup({
+    auto_start = true,
   })
 end
 EOF
