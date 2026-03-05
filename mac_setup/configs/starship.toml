@@ -1,0 +1,87 @@
+format = """
+$directory\
+$git_branch\
+$git_status\
+$golang\
+$python\
+$terraform\
+$docker_context\
+$aws\
+$cmd_duration\
+$line_break\
+$character"""
+
+add_newline = false
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+
+[directory]
+truncation_length = 3
+truncate_to_repo = true
+style = "bold cyan"
+
+[git_branch]
+symbol = " "
+style = "bold purple"
+truncation_length = 30
+
+[git_status]
+style = "bold yellow"
+conflicted = "⚡"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+untracked = "?${count}"
+stashed = "📦"
+modified = "!${count}"
+staged = "+${count}"
+deleted = "✘${count}"
+
+[golang]
+symbol = " "
+detect_files = ["go.mod", "go.sum", "go.work"]
+
+[python]
+symbol = " "
+style = "bold yellow"
+
+[kubernetes]
+symbol = "⎈ "
+style = "bold blue"
+disabled = true
+
+[kubernetes.context_aliases]
+"arn:aws:eks:*:*:cluster/*" = "$1"
+
+[terraform]
+symbol = "💠 "
+style = "bold 105"
+
+[docker_context]
+symbol = " "
+only_with_files = true
+
+[aws]
+symbol = "☁️  "
+format = '[$symbol($profile)(\($region\))]($style) '
+
+[cmd_duration]
+min_time = 2000
+format = "[⏱ $duration]($style) "
+style = "bold yellow"
+
+[package]
+disabled = true
+
+[nodejs]
+disabled = true
+
+[ruby]
+disabled = true
+
+[java]
+disabled = true
+
+[php]
+disabled = true

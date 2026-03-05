@@ -1,0 +1,5 @@
+.mise.toml
+.envrc
+.env
+.env.local
+.tool-versions

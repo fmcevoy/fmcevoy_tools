@@ -1,0 +1,105 @@
+#!/usr/bin/env zsh
+# =============================================================================
+# start_tmux_dev - Dev session launcher
+# =============================================================================
+# Creates a "Dev" tmux session with an apps tab and auto-restores worktrees.
+# Usage: ~/start_tmux_dev (aliased as 't' in zshrc)
+
+SESSION="Dev"
+
+# Attach if session already exists
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+  exec tmux attach-session -t "$SESSION"
+fi
+
+# Get terminal dimensions for percentage-based splits
+COLS="$(tput cols)"
+LINES="$(tput lines)"
+
+# Create session (detached so we can configure before attaching)
+tmux new-session -d -s "$SESSION" -x "$COLS" -y "$LINES"
+
+# ---------------------------------------------------------------------------
+# Tab 0: apps (8 panes — 2 columns x 4 rows)
+# ---------------------------------------------------------------------------
+tmux rename-window -t "${SESSION}:0" "apps"
+
+# Create 7 additional panes (8 total), then tile them
+for i in {1..7}; do
+  tmux split-window -t "${SESSION}:apps"
+done
+tmux select-layout -t "${SESSION}:apps" tiled
+
+# Send startup commands to each pane (customize these)
+# tmux send-keys -t "${SESSION}:apps.0" "cd ~/workspaces/app1 && npm start" Enter
+# tmux send-keys -t "${SESSION}:apps.1" "cd ~/workspaces/app2 && npm start" Enter
+# ... etc
+
+# Select first pane
+tmux select-pane -t "${SESSION}:apps.0"
+
+# ---------------------------------------------------------------------------
+# Auto-restore worktrees
+# ---------------------------------------------------------------------------
+# Worktree helper: create 6-pane layout for a worktree
+_create_worktree_tab() {
+  local session="$1" name="$2" dir="$3" tool="${4:-claude --dangerously-skip-permissions}"
+
+  tmux new-window -t "$session" -n "$name" -c "$dir"
+
+  # Split: right pane 33% width (tool pane)
+  tmux split-window -h -t "${session}:${name}" -p 33 -c "$dir"
+
+  # Split left pane (pane 0) vertically 50% (top/bottom)
+  tmux split-window -v -t "${session}:${name}.0" -p 50 -c "$dir"
+
+  # Split bottom-left (pane 1) horizontally 50%
+  tmux split-window -h -t "${session}:${name}.1" -p 50 -c "$dir"
+
+  # Split top-right of bottom-left quadrant (pane 1) vertically 50%
+  tmux split-window -v -t "${session}:${name}.1" -p 50 -c "$dir"
+
+  # Split bottom-right of bottom-left quadrant (pane 3) vertically 50%
+  tmux split-window -v -t "${session}:${name}.3" -p 50 -c "$dir"
+
+  # Send commands
+  tmux send-keys -t "${session}:${name}.0" "nvim ." Enter
+  tmux send-keys -t "${session}:${name}.5" "$tool" Enter
+
+  # Store worktree path as window option
+  tmux set-option -w -t "${session}:${name}" "@worktree_path" "$dir"
+
+  # Focus nvim pane
+  tmux select-pane -t "${session}:${name}.0"
+}
+
+# Scan for worktrees in ~/workspaces/*/
+for gitfile in ~/workspaces/*/.git; do
+  # Only process .git FILES (worktrees), not directories (main repos)
+  [[ -f "$gitfile" ]] || continue
+
+  wt_dir="$(dirname "$gitfile")"
+  wt_basename="$(basename "$wt_dir")"
+
+  # Extract repo name and branch from dir name (format: repo.branch-name)
+  repo_name="${wt_basename%%.*}"
+  branch_part="${wt_basename#*.}"
+
+  # Get actual branch name
+  branch="$(cd "$wt_dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "$branch_part")"
+
+  # Short branch name for tab
+  short_branch="${branch##*/}"
+  tab_name="wt:${repo_name}:${short_branch}"
+
+  # Trust mise if present
+  if [[ -f "$wt_dir/.mise.toml" ]] && command -v mise &>/dev/null; then
+    mise trust "$wt_dir/.mise.toml" 2>/dev/null || true
+  fi
+
+  _create_worktree_tab "$SESSION" "$tab_name" "$wt_dir"
+done
+
+# Select first window and attach
+tmux select-window -t "${SESSION}:0"
+exec tmux attach-session -t "$SESSION"

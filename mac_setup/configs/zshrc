@@ -1,0 +1,413 @@
+# =============================================================================
+# zshrc - managed by mac_setup
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# PATH
+# ---------------------------------------------------------------------------
+export PATH="/opt/homebrew/bin:$HOME/.pyenv/bin:$HOME/.local/bin:$HOME/go/bin:$HOME/bin:/usr/local/bin:$HOME:$PATH"
+
+# ---------------------------------------------------------------------------
+# Environment
+# ---------------------------------------------------------------------------
+export EDITOR='nvim'
+export GOPATH="$HOME/go"
+
+# Graphviz compilation flags (hardcoded to avoid slow brew --prefix call)
+GRAPHVIZ_PREFIX="/opt/homebrew/opt/graphviz"
+if [[ -d "$GRAPHVIZ_PREFIX" ]]; then
+  export CFLAGS="-I${GRAPHVIZ_PREFIX}/include"
+  export LDFLAGS="-L${GRAPHVIZ_PREFIX}/lib"
+fi
+
+# ---------------------------------------------------------------------------
+# Oh My Zsh
+# ---------------------------------------------------------------------------
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME=""
+
+plugins=(
+  git
+  fzf
+  fzf-tab
+  docker
+  kubectl
+  golang
+  terraform
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+)
+
+[[ -d "$ZSH" ]] && source "$ZSH/oh-my-zsh.sh"
+
+# ---------------------------------------------------------------------------
+# Tool initializations (order matters)
+# ---------------------------------------------------------------------------
+# mise (runtime version manager)
+command -v mise &>/dev/null && eval "$(mise activate zsh)"
+
+# pyenv
+if [[ -d "$HOME/.pyenv" ]]; then
+  export PYENV_ROOT="$HOME/.pyenv"
+  eval "$(pyenv init -)"
+  eval "$(pyenv virtualenv-init -)"
+fi
+
+# zoxide (smart cd)
+command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
+
+# temporal completion (conditional)
+command -v temporal &>/dev/null && eval "$(temporal completion zsh)" 2>/dev/null
+
+# starship prompt (MUST be last — installs precmd hook)
+command -v starship &>/dev/null && eval "$(starship init zsh)"
+
+# ---------------------------------------------------------------------------
+# Modern CLI aliases
+# ---------------------------------------------------------------------------
+alias ls='eza -al'
+alias cat='bat'
+alias vim='nvim'
+alias du='duf'
+alias dig='doggo'
+alias ack='ag'
+
+# ---------------------------------------------------------------------------
+# Handy aliases
+# ---------------------------------------------------------------------------
+alias v='nvim ~/.zshrc'
+alias vo='cat ~/.zshrc'
+alias r='source ~/.zshrc'
+alias k='kubectl'
+alias kc='kubectl config current-context'
+alias dx='docker kill $(docker ps -q) 2>/dev/null'
+alias routes='netstat -nr'
+alias a='assume'
+alias ac='assume -c'
+
+# Git: stash, update main, rebase current branch
+prr() {
+  local stashed=false
+  if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; then
+    git stash push -m "prr-auto" && stashed=true
+  fi
+  git checkout main &&
+    git pull --rebase &&
+    git checkout - &&
+    git rebase main -Xtheirs
+  $stashed && git stash pop
+}
+
+# ---------------------------------------------------------------------------
+# Poetry helpers
+# ---------------------------------------------------------------------------
+alias penv='poetry env use $(which python)'
+alias psh='poetry shell'
+alias pn='poetry update && poetry install'
+
+activate() {
+  local venv_path
+  venv_path="$(poetry env info --path 2>/dev/null)"
+  if [[ -n "$venv_path" && -f "$venv_path/bin/activate" ]]; then
+    source "$venv_path/bin/activate"
+  else
+    # Fallback to local env directory
+    if [[ -f env/bin/activate ]]; then
+      source env/bin/activate
+    else
+      echo "No virtualenv found"
+    fi
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Fuzzy git diff functions
+# ---------------------------------------------------------------------------
+# fzf + delta: interactive file picker with syntax-highlighted diff preview
+fd() {
+  local file
+  file=$(git diff --name-only 2>/dev/null | fzf --preview 'git diff -- {} | delta --width=${FZF_PREVIEW_COLUMNS:-80}' --preview-window=right:65%)
+  [[ -n "$file" ]] && git diff -- "$file" | delta
+}
+
+# fzf + difftastic: interactive file picker with structural diff preview
+fdd() {
+  local file
+  file=$(git diff --name-only 2>/dev/null | fzf --preview 'difft <(git show HEAD:{}) {}' --preview-window=right:65%)
+  [[ -n "$file" ]] && difft <(git show HEAD:"$file") "$file"
+}
+
+# ---------------------------------------------------------------------------
+# Tmux session commands
+# ---------------------------------------------------------------------------
+alias t='~/start_tmux_dev'
+alias tx='tmux kill-server'
+alias tl='tmux ls'
+
+# ---------------------------------------------------------------------------
+# Worktree management
+# ---------------------------------------------------------------------------
+
+# Dim verbose output helper
+_tw_info() { printf '\033[2m  → %s\033[0m\n' "$*"; }
+
+# Create worktree + tmux tab
+# Usage: tw [c|o|cc] <branch> [base]
+tw() {
+  local tool_arg branch base tool
+
+  # Detect if first arg is a tool selector
+  case "${1:-}" in
+    c)  tool="cursor agent --yolo"; shift ;;
+    o)  tool="opencode"; shift ;;
+    cc) tool="claude --dangerously-skip-permissions"; shift ;;
+    *)  tool="claude --dangerously-skip-permissions" ;;
+  esac
+
+  branch="${1:?Usage: tw [c|o|cc] <branch> [base]}"
+  base="${2:-}"
+
+  # Resolve main repo root (works from inside worktrees too)
+  local git_common_dir main_repo repo_name
+  git_common_dir="$(git rev-parse --git-common-dir 2>/dev/null)"
+  if [[ -z "$git_common_dir" || "$git_common_dir" == ".git" ]]; then
+    main_repo="$(pwd)"
+  else
+    main_repo="$(cd "$git_common_dir/.." && pwd)"
+  fi
+  repo_name="$(basename "$main_repo")"
+
+  # Short branch name for tab
+  local short_branch="${branch##*/}"
+  local tab_name="wt:${repo_name}:${short_branch}"
+
+  # If tab already exists, switch to it
+  if tmux list-windows -F '#{window_name}' 2>/dev/null | grep -qF "$tab_name"; then
+    _tw_info "Tab '$tab_name' already exists, switching"
+    tmux select-window -t "$tab_name"
+    return 0
+  fi
+
+  # Worktree directory: sibling of main repo, named repo.branch-with-dashes
+  local wt_branch_safe="${branch//\//-}"
+  local wt_dir="$(dirname "$main_repo")/${repo_name}.${wt_branch_safe}"
+
+  # Create worktree if directory doesn't exist
+  if [[ ! -d "$wt_dir" ]]; then
+    _tw_info "git worktree add $wt_dir -b $branch ${base:-HEAD}"
+    if [[ -n "$base" ]]; then
+      git worktree add "$wt_dir" -b "$branch" "$base" 2>/dev/null || \
+        git worktree add "$wt_dir" "$branch" 2>/dev/null
+    else
+      git worktree add "$wt_dir" -b "$branch" 2>/dev/null || \
+        git worktree add "$wt_dir" "$branch" 2>/dev/null
+    fi
+
+    if [[ $? -ne 0 ]]; then
+      echo "Failed to create worktree"
+      return 1
+    fi
+
+    # Copy dotfiles from .worktreerc
+    if [[ -f "$HOME/.worktreerc" ]]; then
+      while IFS= read -r dotfile || [[ -n "$dotfile" ]]; do
+        [[ -z "$dotfile" || "$dotfile" == \#* ]] && continue
+        if [[ -f "$main_repo/$dotfile" ]]; then
+          cp "$main_repo/$dotfile" "$wt_dir/$dotfile"
+          _tw_info "Copied $dotfile"
+        fi
+      done < "$HOME/.worktreerc"
+    fi
+
+    # Trust mise if present
+    if [[ -f "$wt_dir/.mise.toml" ]] && command -v mise &>/dev/null; then
+      mise trust "$wt_dir/.mise.toml" 2>/dev/null
+      _tw_info "mise trust .mise.toml"
+    fi
+  else
+    _tw_info "Worktree directory exists, opening tab only"
+  fi
+
+  # Create tmux window with 6-pane layout
+  local session
+  session="$(tmux display-message -p '#{session_name}')"
+
+  tmux new-window -t "$session" -n "$tab_name" -c "$wt_dir"
+
+  # Right pane (tool) — 33% width
+  tmux split-window -h -t "${session}:${tab_name}" -p 33 -c "$wt_dir"
+
+  # Split left (pane 0) into top/bottom
+  tmux split-window -v -t "${session}:${tab_name}.0" -p 50 -c "$wt_dir"
+
+  # Split bottom-left into left/right
+  tmux split-window -h -t "${session}:${tab_name}.1" -p 50 -c "$wt_dir"
+
+  # Split bottom-left-top vertically
+  tmux split-window -v -t "${session}:${tab_name}.1" -p 50 -c "$wt_dir"
+
+  # Split bottom-left-bottom vertically
+  tmux split-window -v -t "${session}:${tab_name}.3" -p 50 -c "$wt_dir"
+
+  # Send commands
+  tmux send-keys -t "${session}:${tab_name}.0" "nvim ." Enter
+  tmux send-keys -t "${session}:${tab_name}.5" "$tool" Enter
+
+  # Store worktree path
+  tmux set-option -w -t "${session}:${tab_name}" "@worktree_path" "$wt_dir"
+
+  # Focus nvim pane
+  tmux select-pane -t "${session}:${tab_name}.0"
+
+  _tw_info "Created $tab_name → $wt_dir"
+}
+
+# Close worktree tab (keep worktree on disk)
+twx() {
+  local win="${1:-}"
+  if [[ -n "$win" ]]; then
+    tmux kill-window -t "$win"
+  else
+    tmux kill-window
+  fi
+}
+
+# Close worktree tab AND remove worktree from disk
+twxx() {
+  local win="${1:-}"
+  local wt_path
+
+  if [[ -n "$win" ]]; then
+    wt_path="$(tmux show-option -wv -t "$win" @worktree_path 2>/dev/null)"
+  else
+    wt_path="$(tmux show-option -wv @worktree_path 2>/dev/null)"
+  fi
+
+  # Remove worktree BEFORE killing window (avoid SIGHUP race)
+  if [[ -n "$wt_path" && -d "$wt_path" ]]; then
+    _tw_info "git worktree remove --force $wt_path"
+    git worktree remove --force "$wt_path" 2>/dev/null
+  fi
+
+  if [[ -n "$win" ]]; then
+    tmux kill-window -t "$win"
+  else
+    tmux kill-window
+  fi
+}
+
+# Restore all active worktrees as tmux tabs
+twr() {
+  local tool="${1:-c}"
+  local tool_cmd
+  case "$tool" in
+    c)  tool_cmd="cursor agent --yolo" ;;
+    o)  tool_cmd="opencode" ;;
+    cc) tool_cmd="claude --dangerously-skip-permissions" ;;
+    *)  tool_cmd="claude --dangerously-skip-permissions" ;;
+  esac
+
+  for gitfile in ~/workspaces/*/.git; do
+    [[ -f "$gitfile" ]] || continue
+
+    local wt_dir="$(dirname "$gitfile")"
+    local wt_basename="$(basename "$wt_dir")"
+    local repo_name="${wt_basename%%.*}"
+    local branch
+    branch="$(cd "$wt_dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+    local short_branch="${branch##*/}"
+    local tab_name="wt:${repo_name}:${short_branch}"
+
+    # Skip if tab already exists
+    if tmux list-windows -F '#{window_name}' 2>/dev/null | grep -qF "$tab_name"; then
+      _tw_info "Skip $tab_name (already open)"
+      continue
+    fi
+
+    _tw_info "Restoring $tab_name"
+
+    local session
+    session="$(tmux display-message -p '#{session_name}')"
+
+    tmux new-window -t "$session" -n "$tab_name" -c "$wt_dir"
+    tmux split-window -h -t "${session}:${tab_name}" -p 33 -c "$wt_dir"
+    tmux split-window -v -t "${session}:${tab_name}.0" -p 50 -c "$wt_dir"
+    tmux split-window -h -t "${session}:${tab_name}.1" -p 50 -c "$wt_dir"
+    tmux split-window -v -t "${session}:${tab_name}.1" -p 50 -c "$wt_dir"
+    tmux split-window -v -t "${session}:${tab_name}.3" -p 50 -c "$wt_dir"
+
+    tmux send-keys -t "${session}:${tab_name}.0" "nvim ." Enter
+    tmux send-keys -t "${session}:${tab_name}.5" "$tool_cmd" Enter
+    tmux set-option -w -t "${session}:${tab_name}" "@worktree_path" "$wt_dir"
+    tmux select-pane -t "${session}:${tab_name}.0"
+  done
+}
+
+# List all active worktrees grouped by repo
+twp() {
+  local grn='\033[32m'
+  local dim='\033[2m'
+  local rst='\033[0m'
+  local current_repo=""
+
+  for gitfile in ~/workspaces/*/.git; do
+    [[ -f "$gitfile" ]] || continue
+
+    local wt_dir="$(dirname "$gitfile")"
+    local wt_basename="$(basename "$wt_dir")"
+    local repo_name="${wt_basename%%.*}"
+    local branch
+    branch="$(cd "$wt_dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")"
+    local short_branch="${branch##*/}"
+    local tab_name="wt:${repo_name}:${short_branch}"
+
+    if [[ "$repo_name" != "$current_repo" ]]; then
+      [[ -n "$current_repo" ]] && echo ""
+      echo "$repo_name"
+      current_repo="$repo_name"
+    fi
+
+    local tab_status=""
+    if tmux list-windows -F '#{window_name}' 2>/dev/null | grep -qF "$tab_name"; then
+      tab_status="${grn}[tab open]${rst}"
+    fi
+
+    printf "  %s  ${dim}%s${rst}  %b\n" "$wt_basename" "$branch" "$tab_status"
+  done
+}
+
+# Headless cursor
+alias ch='cursor agent -p --force --output-format stream-json --stream-partial-output'
+cch() { claude -p --dangerously-skip-permissions "$*"; }
+
+# wt* aliases (mirror tw* functions)
+alias wt='tw'
+alias wtx='twx'
+alias wtxx='twxx'
+alias wtr='twr'
+alias wtp='twp'
+
+# ---------------------------------------------------------------------------
+# Help
+# ---------------------------------------------------------------------------
+alias h='~/tmux_help'
+alias help='~/tmux_help'
+
+# ---------------------------------------------------------------------------
+# Preexec hook: show expanded alias before every command
+# ---------------------------------------------------------------------------
+_expand_alias_preexec() {
+  local cmd="${1%% *}"
+  local expanded="${aliases[$cmd]:-}"
+  if [[ -n "$expanded" ]]; then
+    printf '\033[2m→ %s\033[0m\n' "${1/$cmd/$expanded}"
+  fi
+}
+
+autoload -Uz add-zsh-hook
+add-zsh-hook preexec _expand_alias_preexec
+
+# ---------------------------------------------------------------------------
+# Secrets (never committed)
+# ---------------------------------------------------------------------------
+[[ -f "$HOME/ee" ]] && source "$HOME/ee"

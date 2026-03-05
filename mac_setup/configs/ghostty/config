@@ -1,0 +1,62 @@
+# Theme
+theme = catppuccin-mocha
+
+# Font
+font-family = JetBrainsMono Nerd Font
+font-size = 14
+font-thicken = true
+
+# Window
+macos-titlebar-style = tabs
+macos-option-as-alt = true
+window-padding-x = 4
+window-padding-y = 4
+window-save-state = always
+window-inherit-working-directory = true
+
+# Appearance
+background-opacity = 0.95
+background-blur-radius = 20
+unfocused-split-opacity = 0.85
+cursor-style = block
+cursor-style-blink = false
+mouse-hide-while-typing = true
+
+# Shell integration
+shell-integration = zsh
+shell-integration-features = cursor,sudo,title
+
+# Scrollback
+scrollback-limit = 50000
+
+# Clipboard
+clipboard-read = allow
+clipboard-write = allow
+copy-on-select = clipboard
+confirm-close-surface = false
+
+# Keybindings
+keybind = super+t=new_tab
+keybind = super+shift+d=new_split:right
+keybind = super+d=new_split:down
+keybind = super+one=goto_tab:1
+keybind = super+two=goto_tab:2
+keybind = super+three=goto_tab:3
+keybind = super+four=goto_tab:4
+keybind = super+five=goto_tab:5
+keybind = super+six=goto_tab:6
+keybind = super+seven=goto_tab:7
+keybind = super+eight=goto_tab:8
+keybind = super+nine=goto_tab:9
+keybind = super+alt+left=goto_split:left
+keybind = super+alt+right=goto_split:right
+keybind = super+alt+up=goto_split:top
+keybind = super+alt+down=goto_split:bottom
+keybind = super+ctrl+left=resize_split:left,20
+keybind = super+ctrl+right=resize_split:right,20
+keybind = super+ctrl+up=resize_split:up,20
+keybind = super+ctrl+down=resize_split:down,20
+keybind = alt+three=text:\x23
+keybind = super+equal=increase_font_size:1
+keybind = super+minus=decrease_font_size:1
+keybind = super+zero=reset_font_size

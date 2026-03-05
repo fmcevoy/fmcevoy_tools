@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# =============================================================================
+# tmux_help - Colored command reference card
+# =============================================================================
+
+RST='\033[0m'
+BLD='\033[1m'
+DIM='\033[2m'
+CYN='\033[36m'
+YEL='\033[33m'
+GRN='\033[32m'
+MAG='\033[35m'
+WHT='\033[1;37m'
+
+echo ""
+echo -e "${BLD}${CYN}╭──────────────────────────────────────────────╮${RST}"
+echo -e "${BLD}${CYN}│          Command Reference Card               │${RST}"
+echo -e "${BLD}${CYN}╰──────────────────────────────────────────────╯${RST}"
+
+echo ""
+echo -e "${BLD}${YEL}  Tmux${RST}"
+echo -e "  ${GRN}Ctrl-a |${RST}       ${DIM}Vertical split${RST}"
+echo -e "  ${GRN}Ctrl-a -${RST}       ${DIM}Horizontal split${RST}"
+echo -e "  ${GRN}Alt-Arrow${RST}      ${DIM}Switch pane${RST}"
+echo -e "  ${GRN}Ctrl-a c${RST}       ${DIM}New window${RST}"
+echo -e "  ${GRN}Ctrl-a F${RST}       ${DIM}tmux-fzf${RST}"
+echo -e "  ${GRN}Ctrl-a Tab${RST}     ${DIM}Extrakto (copy text from pane)${RST}"
+echo -e "  ${GRN}t${RST}              ${DIM}Start/attach Dev session${RST}"
+echo -e "  ${GRN}tx${RST}             ${DIM}Kill all tmux sessions${RST}"
+echo -e "  ${GRN}tl${RST}             ${DIM}List tmux sessions${RST}"
+
+echo ""
+echo -e "${BLD}${YEL}  Worktrees${RST}"
+echo -e "  ${GRN}tw <branch>${RST}    ${DIM}Create worktree + tmux tab (claude)${RST}"
+echo -e "  ${GRN}tw o <branch>${RST}  ${DIM}Create worktree + tab (opencode)${RST}"
+echo -e "  ${GRN}tw cc <branch>${RST} ${DIM}Create worktree + tab (claude)${RST}"
+echo -e "  ${GRN}twx${RST}            ${DIM}Close tab (keep worktree on disk)${RST}"
+echo -e "  ${GRN}twxx${RST}           ${DIM}Close tab + remove worktree${RST}"
+echo -e "  ${GRN}twr${RST}            ${DIM}Restore all worktree tabs${RST}"
+echo -e "  ${GRN}twp${RST}            ${DIM}List worktrees by repo${RST}"
+
+echo ""
+echo -e "${BLD}${YEL}  Worktree Layout${RST}"
+echo -e "${MAG}  ┌──────────────────────┬──────────┐${RST}"
+echo -e "${MAG}  │                      │          │${RST}"
+echo -e "${MAG}  │       nvim .         │   tool   │${RST}"
+echo -e "${MAG}  │      (50%h)          │  (33%w)  │${RST}"
+echo -e "${MAG}  │                      │          │${RST}"
+echo -e "${MAG}  ├───────────┬──────────┤          │${RST}"
+echo -e "${MAG}  │  term 1   │ term 3   │          │${RST}"
+echo -e "${MAG}  │           │          │          │${RST}"
+echo -e "${MAG}  ├───────────┼──────────┤          │${RST}"
+echo -e "${MAG}  │  term 2   │ term 4   │          │${RST}"
+echo -e "${MAG}  │           │          │          │${RST}"
+echo -e "${MAG}  └───────────┴──────────┴──────────┘${RST}"
+
+echo ""
+echo -e "${BLD}${YEL}  CLI Aliases${RST}"
+echo -e "  ${GRN}ls${RST}  ${DIM}→ eza -al${RST}    ${GRN}cat${RST} ${DIM}→ bat${RST}       ${GRN}vim${RST} ${DIM}→ nvim${RST}"
+echo -e "  ${GRN}du${RST}  ${DIM}→ duf${RST}        ${GRN}dig${RST} ${DIM}→ doggo${RST}    ${GRN}ack${RST} ${DIM}→ ag${RST}"
+
+echo ""
+echo -e "${BLD}${YEL}  Shortcuts${RST}"
+echo -e "  ${GRN}v${RST}              ${DIM}Edit ~/.zshrc in nvim${RST}"
+echo -e "  ${GRN}vo${RST}             ${DIM}View ~/.zshrc${RST}"
+echo -e "  ${GRN}r${RST}              ${DIM}Reload shell (source ~/.zshrc)${RST}"
+echo -e "  ${GRN}k${RST}              ${DIM}kubectl${RST}"
+echo -e "  ${GRN}a / ac${RST}         ${DIM}AWS assume role / console${RST}"
+echo -e "  ${GRN}prr${RST}            ${DIM}Stash, rebase main, restore${RST}"
+echo -e "  ${GRN}fd${RST}             ${DIM}Fuzzy git diff (delta)${RST}"
+echo -e "  ${GRN}fdd${RST}            ${DIM}Fuzzy git diff (difftastic)${RST}"
+
+echo ""
+echo -e "${BLD}${YEL}  Neovim${RST}"
+echo -e "  ${GRN}Leader-p${RST}       ${DIM}Find files${RST}"
+echo -e "  ${GRN}Leader-fg${RST}      ${DIM}Live grep${RST}"
+echo -e "  ${GRN}Leader-fb${RST}      ${DIM}Buffers${RST}"
+echo -e "  ${GRN}Leader-s${RST}       ${DIM}Save all${RST}"
+echo -e "  ${GRN}Ctrl-n${RST}         ${DIM}NERDTree${RST}"
+echo -e "  ${GRN}Ctrl-\\${RST}        ${DIM}Terminal${RST}"
+echo -e "  ${GRN}jj${RST}             ${DIM}Escape + save${RST}"
+
+echo ""
+echo -e "${BLD}${YEL}  Poetry${RST}"
+echo -e "  ${GRN}penv${RST}           ${DIM}poetry env use \$(which python)${RST}"
+echo -e "  ${GRN}psh${RST}            ${DIM}poetry shell${RST}"
+echo -e "  ${GRN}pn${RST}             ${DIM}poetry update + install${RST}"
+echo -e "  ${GRN}activate${RST}       ${DIM}source env/bin/activate${RST}"
+
+echo ""

@@ -1,0 +1,112 @@
+# =============================================================================
+# Brewfile - Dev Environment
+# =============================================================================
+# Usage: brew bundle --file=./Brewfile
+# Check: brew bundle check --file=./Brewfile
+
+# ---------------------------------------------------------------------------
+# Taps
+# ---------------------------------------------------------------------------
+tap "anomalyco/tap"
+tap "blendle/blendle"
+tap "common-fate/granted"
+tap "earthly/earthly"
+tap "gjbae1212/gossm"
+tap "hashicorp/tap"
+tap "kdash-rs/kdash"
+
+# ---------------------------------------------------------------------------
+# Core CLI
+# ---------------------------------------------------------------------------
+brew "bat"
+brew "btop"
+brew "difftastic"
+brew "doggo"
+brew "duf"
+brew "eza"
+brew "fzf"
+brew "gh"
+brew "git-delta"
+brew "glab"
+brew "glow"
+brew "jq"
+brew "just"
+brew "lazydocker"
+brew "lazygit"
+brew "lynx"
+brew "neovim"
+brew "netcat"
+brew "pandoc"
+brew "ripgrep"
+brew "starship"
+brew "the_silver_searcher"
+brew "tldr"
+brew "tmux"
+brew "tre-command"
+brew "tree"
+brew "wget"
+brew "yamllint"
+brew "yq"
+brew "zoxide"
+
+# ---------------------------------------------------------------------------
+# Languages & runtimes
+# ---------------------------------------------------------------------------
+brew "go"
+brew "mise"
+brew "node"
+brew "poetry"
+brew "python@3.12"
+brew "uv"
+brew "virtualenv"
+
+# ---------------------------------------------------------------------------
+# Infrastructure & cloud
+# ---------------------------------------------------------------------------
+brew "argocd"
+brew "awscli"
+brew "envoy"
+brew "grpcurl"
+brew "helm"
+brew "k9s"
+brew "kustomize"
+brew "minikube"
+brew "sshuttle"
+brew "teleport"
+brew "temporal"
+brew "hashicorp/tap/terraform"
+brew "hashicorp/tap/vault-enterprise"
+brew "anomalyco/tap/opencode"
+brew "blendle/blendle/kns"
+brew "common-fate/granted/granted"
+brew "gjbae1212/gossm/gossm"
+brew "kdash-rs/kdash/kdash"
+
+# ---------------------------------------------------------------------------
+# Build tools
+# ---------------------------------------------------------------------------
+brew "buf"
+brew "cmake"
+brew "earthly/earthly/earthly"
+brew "gcc"
+brew "graphviz"
+brew "openssl@3"
+brew "protobuf"
+
+# ---------------------------------------------------------------------------
+# Database
+# ---------------------------------------------------------------------------
+brew "libpq"
+brew "pgcli"
+brew "postgresql@15"
+brew "redis"
+
+# ---------------------------------------------------------------------------
+# Casks
+# ---------------------------------------------------------------------------
+cask "1password-cli"
+cask "claude-code"
+cask "docker-desktop"
+cask "font-jetbrains-mono-nerd-font"
+cask "git-credential-manager"
+cask "orbstack"

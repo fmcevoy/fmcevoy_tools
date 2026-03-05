@@ -1,0 +1,7 @@
+# SSH config managed by mac_setup
+# Host-specific configurations below
+
+Host *
+    AddKeysToAgent yes
+    UseKeychain yes
+    IdentityFile ~/.ssh/id_ed25519

@@ -1,0 +1,45 @@
+[include]
+	path = ~/.gitconfig.local
+
+[push]
+	autoSetupRemote = true
+
+[branch]
+	sort = -committerdate
+
+[diff]
+	algorithm = histogram
+	colorMoved = plain
+	mnemonicPrefix = true
+	renames = true
+
+[core]
+	pager = delta
+	excludesfile = ~/.gitignore
+
+[merge]
+	conflictStyle = zdiff3
+
+[pull]
+	rebase = true
+
+[help]
+	autocorrect = prompt
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
+
+[credential]
+	helper = /opt/homebrew/share/git-core/git-credential-manager
+	credentialStore = keychain
+
+[alias]
+	co = checkout
+	pr = pull --rebase
+	p = push
+	s = status
+	st = stash
+	ca = commit --amend --no-edit
