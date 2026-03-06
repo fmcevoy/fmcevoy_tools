@@ -1,0 +1,379 @@
+#!/usr/bin/env bash
+# =============================================================================
+# cli-upgrades - Upgrade all CLI tools and package managers
+# =============================================================================
+# Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
+# Sections: brew, npm, pip, poetry, go, mise, pyenv, omz, zsh-plugins,
+#           tpm, nvim, claude, codex, mcporter, openclaw
+set -uo pipefail
+
+DRY_RUN=false
+ONLY=""
+SKIP=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run)  DRY_RUN=true; shift ;;
+    --only)     ONLY="$2"; shift 2 ;;
+    --skip)     SKIP="$2"; shift 2 ;;
+    --help|-h)
+      echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
+      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude codex mcporter openclaw"
+      exit 0
+      ;;
+    *) echo "Unknown option: $1"; exit 1 ;;
+  esac
+done
+
+# ---------------------------------------------------------------------------
+# Logging setup
+# ---------------------------------------------------------------------------
+LOG_DIR="$HOME/upgrades-history"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/$(date +%Y-%m-%d_%H-%M-%S).log"
+
+# Tee all output to both terminal and log file (strip ANSI for log)
+exec > >(tee >(sed 's/\x1b\[[0-9;]*m//g' > "$LOG_FILE")) 2>&1
+
+# ---------------------------------------------------------------------------
+# Output helpers
+# ---------------------------------------------------------------------------
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+section() { printf "\n${BLUE}━━━ %s ━━━${RESET}\n" "$1"; }
+ok()      { printf "${GREEN} ✓  %s${RESET}\n" "$1"; }
+skip()    { printf "${YELLOW} –  %s${RESET}\n" "$1"; }
+fail()    { printf "${RED} ✗  %s${RESET}\n" "$1"; }
+dim()     { printf "${DIM}    %s${RESET}\n" "$1"; }
+
+run() {
+  if $DRY_RUN; then
+    skip "[dry-run] $*"
+    return 0
+  fi
+  dim "$*"
+  "$@"
+}
+
+should_run() {
+  local name="$1"
+  if [[ -n "$ONLY" && "$ONLY" != "$name" ]]; then return 1; fi
+  if [[ -n "$SKIP" && "$SKIP" == *"$name"* ]]; then return 1; fi
+  return 0
+}
+
+FAILED=()
+SUCCEEDED=()
+
+# Track version changes: before_versions[name]=version
+declare -A BEFORE_VERSIONS
+declare -A AFTER_VERSIONS
+
+safe_version() {
+  # Run a version command with a 5s timeout to avoid hangs
+  timeout 5 bash -c "$1" 2>/dev/null | head -1 || true
+}
+
+try_upgrade() {
+  local name="$1"; shift
+  if "$@"; then
+    SUCCEEDED+=("$name")
+  else
+    FAILED+=("$name")
+    fail "$name had errors (continuing)"
+  fi
+}
+
+# =============================================================================
+printf "${BLUE}╔═══════════════════════════════════════════╗${RESET}\n"
+printf "${BLUE}║         CLI Upgrades                      ║${RESET}\n"
+printf "${BLUE}╚═══════════════════════════════════════════╝${RESET}\n"
+printf "${DIM}    $(date '+%Y-%m-%d %H:%M:%S')${RESET}\n"
+printf "${DIM}    Log: %s${RESET}\n" "$LOG_FILE"
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Snapshot versions BEFORE upgrades
+# ---------------------------------------------------------------------------
+section "Capturing current versions"
+capture_all_versions() {
+  local -n versions_ref=$1
+  command -v brew &>/dev/null    && versions_ref[brew]="$(safe_version 'brew --version')"
+  command -v node &>/dev/null    && versions_ref[node]="$(safe_version 'node --version')"
+  command -v npm &>/dev/null     && versions_ref[npm]="$(safe_version 'npm --version')"
+  command -v pip3 &>/dev/null    && versions_ref[pip]="$(safe_version 'pip3 --version')"
+  command -v poetry &>/dev/null  && versions_ref[poetry]="$(safe_version 'poetry --version')"
+  command -v go &>/dev/null      && versions_ref[go]="$(safe_version 'go version')"
+  command -v mise &>/dev/null    && versions_ref[mise]="$(safe_version 'mise --version')"
+  command -v pyenv &>/dev/null   && versions_ref[pyenv]="$(safe_version 'pyenv --version')"
+  command -v nvim &>/dev/null    && versions_ref[nvim]="$(safe_version 'nvim --version')"
+  command -v codex &>/dev/null   && versions_ref[codex]="$(safe_version 'codex --version')"
+  command -v opencode &>/dev/null && versions_ref[opencode]="$(safe_version 'opencode --version')"
+  command -v cursor &>/dev/null  && versions_ref[cursor]="$(safe_version 'cursor --version')"
+  # claude --version hangs (TUI), use npm instead
+  command -v npm &>/dev/null     && versions_ref[claude]="$(safe_version "npm list -g @anthropic-ai/claude-code 2>/dev/null | grep claude-code | sed 's/.*@//'")"
+}
+capture_all_versions BEFORE_VERSIONS
+ok "Versions captured"
+
+# ---------------------------------------------------------------------------
+# Homebrew
+# ---------------------------------------------------------------------------
+if should_run "brew" && command -v brew &>/dev/null; then
+  section "Homebrew"
+  try_upgrade "brew update" run brew update
+  try_upgrade "brew upgrade" run brew upgrade
+  try_upgrade "brew cask upgrade" run brew upgrade --cask --greedy
+  try_upgrade "brew cleanup" run brew cleanup --prune=30
+  ok "Homebrew done"
+elif should_run "brew"; then
+  skip "brew not found"
+fi
+
+# ---------------------------------------------------------------------------
+# npm global packages
+# ---------------------------------------------------------------------------
+if should_run "npm" && command -v npm &>/dev/null; then
+  section "npm global packages"
+  try_upgrade "npm self-update" run npm install -g npm@latest
+  ok "npm done"
+elif should_run "npm"; then
+  skip "npm not found"
+fi
+
+# ---------------------------------------------------------------------------
+# Claude Code (npm)
+# ---------------------------------------------------------------------------
+if should_run "claude" && command -v npm &>/dev/null; then
+  section "Claude Code"
+  try_upgrade "claude-code" run npm install -g @anthropic-ai/claude-code@latest
+  ok "Claude Code done"
+elif should_run "claude"; then
+  skip "npm not found (needed for claude-code)"
+fi
+
+# ---------------------------------------------------------------------------
+# OpenAI Codex (npm)
+# ---------------------------------------------------------------------------
+if should_run "codex" && command -v npm &>/dev/null; then
+  section "OpenAI Codex"
+  if npm list -g @openai/codex &>/dev/null; then
+    try_upgrade "codex" run npm install -g @openai/codex@latest
+    ok "Codex done"
+  else
+    skip "codex not installed globally"
+  fi
+elif should_run "codex"; then
+  skip "npm not found"
+fi
+
+# ---------------------------------------------------------------------------
+# mcporter (npm)
+# ---------------------------------------------------------------------------
+if should_run "mcporter" && command -v npm &>/dev/null; then
+  section "mcporter"
+  if npm list -g mcporter &>/dev/null; then
+    try_upgrade "mcporter" run npm install -g mcporter@latest
+    ok "mcporter done"
+  else
+    skip "mcporter not installed globally"
+  fi
+elif should_run "mcporter"; then
+  skip "npm not found"
+fi
+
+# ---------------------------------------------------------------------------
+# openclaw (npm)
+# ---------------------------------------------------------------------------
+if should_run "openclaw" && command -v npm &>/dev/null; then
+  section "openclaw"
+  if npm list -g openclaw &>/dev/null; then
+    try_upgrade "openclaw" run npm install -g openclaw@latest
+    ok "openclaw done"
+  else
+    skip "openclaw not installed globally"
+  fi
+elif should_run "openclaw"; then
+  skip "npm not found"
+fi
+
+# ---------------------------------------------------------------------------
+# pip / pip3
+# ---------------------------------------------------------------------------
+if should_run "pip" && command -v pip3 &>/dev/null; then
+  section "pip"
+  dim "pip is managed by Homebrew (upgraded above)"
+  dim "$(pip3 --version)"
+  ok "pip done"
+fi
+
+# ---------------------------------------------------------------------------
+# Poetry
+# ---------------------------------------------------------------------------
+if should_run "poetry" && command -v poetry &>/dev/null; then
+  section "Poetry"
+  dim "Poetry binary managed by Homebrew (upgraded above)"
+  dim "$(poetry --version)"
+  ok "Poetry done"
+fi
+
+# ---------------------------------------------------------------------------
+# Go (managed by brew, just verify)
+# ---------------------------------------------------------------------------
+if should_run "go" && command -v go &>/dev/null; then
+  section "Go"
+  dim "Go is managed by Homebrew (upgraded above)"
+  dim "$(go version)"
+  ok "Go done"
+fi
+
+# ---------------------------------------------------------------------------
+# Cursor (auto-updates itself, just report version)
+# ---------------------------------------------------------------------------
+if should_run "cursor" && command -v cursor &>/dev/null; then
+  section "Cursor"
+  dim "Cursor auto-updates via the app — version tracked for reference"
+  dim "$(cursor --version | head -1)"
+  ok "Cursor done"
+fi
+
+# ---------------------------------------------------------------------------
+# mise
+# ---------------------------------------------------------------------------
+if should_run "mise" && command -v mise &>/dev/null; then
+  section "mise"
+  # mise self-update only works for standalone install; brew handles the binary
+  if mise self-update --yes 2>&1 | grep -q "package manager"; then
+    dim "mise binary managed by Homebrew (upgraded above)"
+    SUCCEEDED+=("mise self-update")
+  else
+    SUCCEEDED+=("mise self-update")
+  fi
+  try_upgrade "mise upgrade" run mise upgrade
+  ok "mise done"
+elif should_run "mise"; then
+  skip "mise not found"
+fi
+
+# ---------------------------------------------------------------------------
+# pyenv
+# ---------------------------------------------------------------------------
+if should_run "pyenv" && command -v pyenv &>/dev/null; then
+  section "pyenv"
+  if [[ -d "$HOME/.pyenv/.git" ]]; then
+    try_upgrade "pyenv update" run pyenv update
+  else
+    dim "pyenv installed via brew (upgraded above)"
+  fi
+  ok "pyenv done"
+elif should_run "pyenv"; then
+  skip "pyenv not found"
+fi
+
+# ---------------------------------------------------------------------------
+# Oh My Zsh
+# ---------------------------------------------------------------------------
+if should_run "omz" && [[ -d "$HOME/.oh-my-zsh" ]]; then
+  section "Oh My Zsh"
+  OMZ_UPDATE="$HOME/.oh-my-zsh/tools/upgrade.sh"
+  if [[ -f "$OMZ_UPDATE" ]]; then
+    try_upgrade "oh-my-zsh" run env ZSH="$HOME/.oh-my-zsh" DISABLE_UPDATE_PROMPT=true bash "$OMZ_UPDATE"
+  else
+    # Fallback: git pull
+    try_upgrade "oh-my-zsh" run git -C "$HOME/.oh-my-zsh" pull --rebase --stat
+  fi
+  ok "Oh My Zsh done"
+elif should_run "omz"; then
+  skip "Oh My Zsh not found"
+fi
+
+# ---------------------------------------------------------------------------
+# Zsh custom plugins (git pull each)
+# ---------------------------------------------------------------------------
+if should_run "zsh-plugins"; then
+  ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+  if [[ -d "$ZSH_CUSTOM/plugins" ]]; then
+    section "Zsh custom plugins"
+    for plugin_dir in "$ZSH_CUSTOM/plugins"/*/; do
+      [[ -d "$plugin_dir/.git" ]] || continue
+      local_name="$(basename "$plugin_dir")"
+      dim "Updating $local_name..."
+      try_upgrade "zsh-plugin:$local_name" git -C "$plugin_dir" pull --rebase --quiet
+    done
+    ok "Zsh plugins done"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# TPM (Tmux Plugin Manager) plugins
+# ---------------------------------------------------------------------------
+if should_run "tpm"; then
+  TPM_UPDATE="$HOME/.tmux/plugins/tpm/bin/update_plugins"
+  if [[ -x "$TPM_UPDATE" ]]; then
+    section "TPM plugins"
+    try_upgrade "tpm plugins" run "$TPM_UPDATE" all
+    ok "TPM done"
+  elif should_run "tpm"; then
+    skip "TPM not found"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# Neovim plugins (vim-plug)
+# ---------------------------------------------------------------------------
+if should_run "nvim" && command -v nvim &>/dev/null; then
+  section "Neovim plugins"
+  try_upgrade "vim-plug upgrade" run nvim --headless +PlugUpgrade +qall 2>&1
+  try_upgrade "vim-plug update" run nvim --headless +PlugUpdate +qall 2>&1
+  ok "Neovim done"
+elif should_run "nvim"; then
+  skip "nvim not found"
+fi
+
+# ---------------------------------------------------------------------------
+# Snapshot versions AFTER upgrades
+# ---------------------------------------------------------------------------
+section "Capturing updated versions"
+capture_all_versions AFTER_VERSIONS
+ok "Versions captured"
+
+# =============================================================================
+# Version change report
+# =============================================================================
+echo ""
+printf "${BLUE}━━━ Version Changes ━━━${RESET}\n"
+CHANGES_FOUND=false
+for tool in "${!BEFORE_VERSIONS[@]}"; do
+  before="${BEFORE_VERSIONS[$tool]:-}"
+  after="${AFTER_VERSIONS[$tool]:-}"
+  if [[ -n "$before" && -n "$after" && "$before" != "$after" ]]; then
+    printf "${GREEN} ↑  %-12s %s → %s${RESET}\n" "$tool" "$before" "$after"
+    CHANGES_FOUND=true
+  fi
+done
+if ! $CHANGES_FOUND; then
+  dim "All tools already at latest versions"
+fi
+
+# =============================================================================
+# Summary
+# =============================================================================
+echo ""
+printf "${BLUE}━━━ Summary ━━━${RESET}\n"
+printf "${GREEN} ✓  Succeeded: %d${RESET}\n" "${#SUCCEEDED[@]}"
+if [[ ${#FAILED[@]} -gt 0 ]]; then
+  printf "${RED} ✗  Failed:    %d${RESET}\n" "${#FAILED[@]}"
+  for f in "${FAILED[@]}"; do
+    printf "${RED}    - %s${RESET}\n" "$f"
+  done
+else
+  printf "${GREEN} ✓  No failures${RESET}\n"
+fi
+echo ""
+printf "${DIM}    Log saved to: %s${RESET}\n" "$LOG_FILE"
+printf "${GREEN}All CLI upgrades complete.${RESET}\n"
