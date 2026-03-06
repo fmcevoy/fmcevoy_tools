@@ -392,6 +392,7 @@ alias wtp='twp'
 # ---------------------------------------------------------------------------
 alias h='~/tmux_help'
 alias help='~/tmux_help'
+alias cliup='~/cli-upgrades'
 
 # ---------------------------------------------------------------------------
 # Preexec hook: show expanded alias before every command
