@@ -32,7 +32,8 @@ chmod +x setup.sh macos_defaults.sh
 9. **macOS defaults** — keyboard repeat, Finder, Dock, trackpad preferences
 10. **Neovim plugins** — headless `:PlugInstall`
 11. **tmux plugins** — TPM install
-12. **Git identity** — create `~/.gitconfig.local` template
+12. **Claude Code MCP servers** — configures MCP servers (Context7, Playwright, GitHub, Supabase, AWS CDK, Docker, Fly.io, gcloud, sequential-thinking) and injects GitHub token from `gh` CLI
+13. **Git identity** — create `~/.gitconfig.local` template
 
 ## Config Files
 
@@ -49,6 +50,7 @@ chmod +x setup.sh macos_defaults.sh
 | `configs/starship.toml` | `~/.config/starship.toml` |
 | `configs/ssh/config` | `~/.ssh/config` |
 | `configs/worktreerc` | `~/.worktreerc` |
+| `configs/claude/mcp.json` | `~/.claude/.mcp.json` (copied, not symlinked — secrets injected at setup) |
 
 ## After Setup
 
@@ -57,3 +59,4 @@ chmod +x setup.sh macos_defaults.sh
 3. Open Ghostty, type `t` to start tmux Dev session
 4. Type `h` for the command reference card
 5. See `SECRETS_CHECKLIST.md` for remaining credentials
+6. Set `SUPABASE_ACCESS_TOKEN` in `~/ee` for Supabase MCP (get from supabase.com/dashboard/account/tokens)

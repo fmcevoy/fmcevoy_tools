@@ -320,9 +320,72 @@ fi
 echo ""
 
 # =============================================================================
-# Step 13: Create gitconfig.local if missing
+# Step 13: Claude Code MCP servers
 # =============================================================================
-info "Step 13: Git identity..."
+info "Step 13: Claude Code MCP servers..."
+
+CLAUDE_DIR="$HOME/.claude"
+CLAUDE_MCP="$CLAUDE_DIR/.mcp.json"
+
+run mkdir -p "$CLAUDE_DIR"
+
+# Copy (not symlink) because we inject secrets into this file
+if [[ ! -f "$CLAUDE_MCP" ]]; then
+  info "Creating Claude Code MCP config..."
+  run cp "$SCRIPT_DIR/configs/claude/mcp.json" "$CLAUDE_MCP"
+  ok "Claude Code MCP config created"
+else
+  # Merge MCP servers from template into existing config
+  info "Merging MCP servers into existing Claude Code MCP config..."
+  if ! $DRY_RUN; then
+    python3 -c "
+import json
+with open('$SCRIPT_DIR/configs/claude/mcp.json') as f:
+    template = json.load(f)
+with open('$CLAUDE_MCP') as f:
+    existing = json.load(f)
+existing.setdefault('mcpServers', {})
+for name, cfg in template['mcpServers'].items():
+    if name not in existing['mcpServers']:
+        existing['mcpServers'][name] = cfg
+with open('$CLAUDE_MCP', 'w') as f:
+    json.dump(existing, f, indent=2)
+    f.write('\n')
+" 2>/dev/null && ok "MCP servers merged" || warn "Could not merge MCP servers"
+  else
+    skip "[dry-run] Would merge MCP servers"
+  fi
+fi
+
+# Inject GitHub token from gh CLI if authenticated
+if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
+  if ! $DRY_RUN; then
+    GH_TOKEN="$(gh auth token 2>/dev/null || true)"
+    if [[ -n "$GH_TOKEN" ]]; then
+      python3 -c "
+import json
+with open('$CLAUDE_MCP') as f:
+    cfg = json.load(f)
+cfg.setdefault('mcpServers', {}).setdefault('github', {}).setdefault('env', {})
+cfg['mcpServers']['github']['env']['GITHUB_PERSONAL_ACCESS_TOKEN'] = '$GH_TOKEN'
+with open('$CLAUDE_MCP', 'w') as f:
+    json.dump(cfg, f, indent=2)
+    f.write('\n')
+" 2>/dev/null && ok "GitHub token injected from gh CLI" || warn "Could not inject GitHub token"
+    fi
+  else
+    skip "[dry-run] Would inject GitHub token from gh CLI"
+  fi
+else
+  warn "gh CLI not authenticated — run 'gh auth login' then re-run setup"
+fi
+
+echo ""
+
+# =============================================================================
+# Step 14: Create gitconfig.local if missing
+# =============================================================================
+info "Step 14: Git identity..."
 
 if [[ ! -f "$HOME/.gitconfig.local" ]]; then
   info "Creating ~/.gitconfig.local template..."
@@ -353,4 +416,6 @@ echo "  2. Run: gh auth login"
 echo "  3. Open a new terminal (or: exec zsh)"
 echo "  4. Type 't' to start tmux Dev session"
 echo "  5. See SECRETS_CHECKLIST.md for credentials to configure"
+echo "  6. Claude Code MCP: set SUPABASE_ACCESS_TOKEN in ~/ee"
+echo "     (get it from supabase.com/dashboard/account/tokens)"
 echo ""

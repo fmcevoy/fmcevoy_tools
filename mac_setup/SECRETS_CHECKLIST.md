@@ -67,6 +67,25 @@ tsh login --proxy=teleport.example.com
 tsh status
 ```
 
+## Claude Code MCP Servers
+
+MCP servers are configured automatically by `setup.sh`. The GitHub token
+is injected from `gh auth` at setup time. Some servers need extra config:
+
+```bash
+# Supabase — get token from supabase.com/dashboard/account/tokens
+# Add to ~/ee:
+# export SUPABASE_ACCESS_TOKEN="sbp_..."
+
+# Docker — requires OrbStack or Docker Desktop running
+# AWS CDK — uses AWS_PROFILE=default, configure with: aws configure
+# Fly.io — authenticate with: fly auth login
+# gcloud — authenticate with: gcloud auth login
+```
+
+MCP config lives in `~/.claude/.mcp.json` (not `settings.json`).
+To verify MCP servers are loaded, restart Claude Code and run `/mcp`.
+
 ## Secrets File (~/ee)
 
 Add environment variables to `~/ee` (sourced by .zshrc):
@@ -76,6 +95,7 @@ nvim ~/ee
 # export ANTHROPIC_API_KEY="..."
 # export OPENAI_API_KEY="..."
 # export GITHUB_TOKEN="..."
+# export SUPABASE_ACCESS_TOKEN="..."
 ```
 
 ## Verification
@@ -88,4 +108,6 @@ kubectl cluster-info
 vault status
 op vault list
 tsh status
+fly auth whoami
+# Claude Code: run /mcp inside a session to verify MCP servers
 ```

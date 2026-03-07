@@ -148,7 +148,7 @@ nnoremap <Leader>g :NERDTreeFind<CR>
 nnoremap <Leader>n :NERDTreeToggle<CR>
 let g:NERDTreeWinSize = 35
 let g:NERDTreeShowHidden = 1
-autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) | exe 'NERDTree' argv()[0] | wincmd p | endif
+autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) | exe 'NERDTree' argv()[0] | wincmd p | enew | endif
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
 
 " ---------------------------------------------------------------------------
@@ -329,6 +329,10 @@ inoremap \\ <Esc>
 nnoremap <S-Enter> O<Esc>
 nnoremap <CR> o<Esc>
 
-" Quickfix Enter override (don't remap Enter in quickfix/NERDTree)
+" Restore natural keys in quickfix and NERDTree
 autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
-autocmd FileType nerdtree nnoremap <buffer> <CR> <CR>
+autocmd FileType nerdtree nmap <buffer> <CR> o
+autocmd FileType nerdtree noremap <buffer> <Up> <Up>
+autocmd FileType nerdtree noremap <buffer> <Down> <Down>
+autocmd FileType nerdtree nmap <buffer> <Left> x
+autocmd FileType nerdtree nmap <buffer> <Right> o
