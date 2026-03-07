@@ -5,8 +5,8 @@ One command to reproduce the entire macOS development environment.
 ## Quick Start
 
 ```bash
-git clone https://github.com/fmcevoy/fmcevoy_tools.git ~/workspaces/fmcevoy_tools
-cd ~/workspaces/fmcevoy_tools/mac_setup
+git clone https://github.com/fmcevoy/fmcevoy_tools.git ~/fmcevoy_tools
+cd ~/fmcevoy_tools/mac_setup
 chmod +x setup.sh macos_defaults.sh
 ./setup.sh
 ```
