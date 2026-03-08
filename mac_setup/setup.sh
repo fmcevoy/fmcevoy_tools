@@ -299,16 +299,12 @@ echo ""
 # =============================================================================
 info "Step 10: meldr..."
 
-if command -v meldr &>/dev/null; then
-  ok "meldr already installed"
+if command -v cargo &>/dev/null; then
+  info "Installing/updating meldr via cargo..."
+  run cargo install --git https://github.com/fmcevoy/meldr.git --force
+  ok "meldr installed ($(meldr --version 2>/dev/null || echo 'unknown'))"
 else
-  if command -v cargo &>/dev/null; then
-    info "Installing meldr via cargo..."
-    run cargo install --git https://github.com/fmcevoy/meldr.git
-    ok "meldr installed"
-  else
-    warn "cargo not found — install rust first, then re-run setup"
-  fi
+  warn "cargo not found — install rust first, then re-run setup"
 fi
 echo ""
 
