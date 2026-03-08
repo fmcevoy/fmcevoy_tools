@@ -274,9 +274,31 @@ fi
 echo ""
 
 # =============================================================================
-# Step 9: Secrets template
+# Step 9: Poetry (v1.x via uv)
 # =============================================================================
-info "Step 9: Secrets template..."
+info "Step 9: Poetry..."
+
+if command -v poetry &>/dev/null; then
+  POETRY_VER="$(poetry --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+' | head -1 || true)"
+  POETRY_MAJOR="${POETRY_VER%%.*}"
+  if [[ "$POETRY_MAJOR" == "2" ]]; then
+    warn "Poetry v2 detected — reinstalling as v1.x"
+    run uv tool install "poetry>=1,<2" --force
+    ok "Poetry v1 installed"
+  else
+    ok "Poetry v1 already installed"
+  fi
+else
+  info "Installing Poetry v1.x..."
+  run uv tool install "poetry>=1,<2"
+  ok "Poetry v1 installed"
+fi
+echo ""
+
+# =============================================================================
+# Step 10: Secrets template
+# =============================================================================
+info "Step 10: Secrets template..."
 
 SECRETS_FILE="$HOME/ee"
 if [[ ! -f "$SECRETS_FILE" ]]; then
@@ -298,9 +320,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 10: macOS defaults
+# Step 11: macOS defaults
 # =============================================================================
-info "Step 10: macOS defaults..."
+info "Step 11: macOS defaults..."
 
 if [[ -f "$SCRIPT_DIR/macos_defaults.sh" ]]; then
   run bash "$SCRIPT_DIR/macos_defaults.sh"
@@ -311,9 +333,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 11: Neovim plugins (headless)
+# Step 12: Neovim plugins (headless)
 # =============================================================================
-info "Step 11: Neovim plugins..."
+info "Step 12: Neovim plugins..."
 
 if command -v nvim &>/dev/null; then
   info "Installing Neovim plugins headlessly..."
@@ -325,9 +347,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 12: TPM plugins
+# Step 13: TPM plugins
 # =============================================================================
-info "Step 12: TPM plugins..."
+info "Step 13: TPM plugins..."
 
 TPM_INSTALL="$HOME/.tmux/plugins/tpm/bin/install_plugins"
 if [[ -x "$TPM_INSTALL" ]]; then
@@ -340,9 +362,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 13: Claude Code MCP servers
+# Step 14: Claude Code MCP servers
 # =============================================================================
-info "Step 13: Claude Code MCP servers..."
+info "Step 14: Claude Code MCP servers..."
 
 CLAUDE_DIR="$HOME/.claude"
 CLAUDE_MCP="$CLAUDE_DIR/.mcp.json"
@@ -403,9 +425,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 14: Create gitconfig.local if missing
+# Step 15: Create gitconfig.local if missing
 # =============================================================================
-info "Step 14: Git identity..."
+info "Step 15: Git identity..."
 
 if [[ ! -f "$HOME/.gitconfig.local" ]]; then
   info "Creating ~/.gitconfig.local template..."
