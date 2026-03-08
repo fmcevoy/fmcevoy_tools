@@ -4,7 +4,7 @@
 # =============================================================================
 # Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
 # Sections: brew, npm, pip, poetry, go, mise, pyenv, omz, zsh-plugins,
-#           tpm, nvim, claude, codex, mcporter
+#           tpm, nvim, claude, codex, mcporter, meldr
 set -uo pipefail
 
 DRY_RUN=false
@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
     --skip)     SKIP="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
-      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude codex mcporter"
+      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude codex mcporter meldr"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -114,6 +114,7 @@ capture_all_versions() {
   command -v nvim &>/dev/null    && versions_ref[nvim]="$(safe_version 'nvim --version')"
   command -v codex &>/dev/null   && versions_ref[codex]="$(safe_version 'codex --version')"
   command -v opencode &>/dev/null && versions_ref[opencode]="$(safe_version 'opencode --version')"
+  command -v meldr &>/dev/null    && versions_ref[meldr]="$(safe_version 'meldr --version')"
   command -v cursor &>/dev/null  && versions_ref[cursor]="$(safe_version 'cursor --version')"
   # claude --version hangs (TUI), use npm instead
   command -v npm &>/dev/null     && versions_ref[claude]="$(safe_version "npm list -g @anthropic-ai/claude-code 2>/dev/null | grep claude-code | sed 's/.*@//'")"
@@ -318,6 +319,17 @@ if should_run "nvim" && command -v nvim &>/dev/null; then
   ok "Neovim done"
 elif should_run "nvim"; then
   skip "nvim not found"
+fi
+
+# ---------------------------------------------------------------------------
+# meldr (cargo)
+# ---------------------------------------------------------------------------
+if should_run "meldr" && command -v cargo &>/dev/null; then
+  section "meldr"
+  try_upgrade "meldr" run cargo install --git https://github.com/fmcevoy/meldr.git
+  ok "meldr done"
+elif should_run "meldr"; then
+  skip "cargo not found (needed for meldr)"
 fi
 
 # ---------------------------------------------------------------------------

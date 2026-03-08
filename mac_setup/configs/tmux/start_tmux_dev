@@ -2,7 +2,7 @@
 # =============================================================================
 # start_tmux_dev - Dev session launcher
 # =============================================================================
-# Creates a "Dev" tmux session with an apps tab and auto-restores worktrees.
+# Creates a "Dev" tmux session with an apps tab and auto-opens meldr worktrees.
 # Usage: ~/start_tmux_dev (aliased as 't' in zshrc)
 
 SESSION="Dev"
@@ -30,75 +30,27 @@ for i in {1..7}; do
 done
 tmux select-layout -t "${SESSION}:apps" tiled
 
-# Send startup commands to each pane (customize these)
-# tmux send-keys -t "${SESSION}:apps.0" "cd ~/workspaces/app1 && npm start" Enter
-# tmux send-keys -t "${SESSION}:apps.1" "cd ~/workspaces/app2 && npm start" Enter
-# ... etc
-
 # Select first pane
 tmux select-pane -t "${SESSION}:apps.0"
 
 # ---------------------------------------------------------------------------
-# Auto-restore worktrees
+# Auto-open meldr worktrees across all workspaces
 # ---------------------------------------------------------------------------
-# Worktree helper: create 6-pane layout for a worktree
-_create_worktree_tab() {
-  local session="$1" name="$2" dir="$3" tool="${4:-claude --dangerously-skip-permissions}"
+if command -v meldr &>/dev/null; then
+  for ws_dir in ~/workspaces/ws-*/; do
+    [[ -f "$ws_dir/meldr.toml" ]] || continue
 
-  tmux new-window -t "$session" -n "$name" -c "$dir"
+    # Get list of worktree branches
+    branches=("${(@f)$(cd "$ws_dir" && meldr worktree list 2>/dev/null | sed 's/ *(tmux:.*//' | tr -d ' ')}")
 
-  # Split: right pane 33% width (tool pane)
-  tmux split-window -h -t "${session}:${name}" -p 33 -c "$dir"
-
-  # Split left pane (pane 0) vertically 50% (top/bottom)
-  tmux split-window -v -t "${session}:${name}.0" -p 50 -c "$dir"
-
-  # Split bottom-left (pane 1) horizontally 50%
-  tmux split-window -h -t "${session}:${name}.1" -p 50 -c "$dir"
-
-  # Split top-right of bottom-left quadrant (pane 1) vertically 50%
-  tmux split-window -v -t "${session}:${name}.1" -p 50 -c "$dir"
-
-  # Split bottom-right of bottom-left quadrant (pane 3) vertically 50%
-  tmux split-window -v -t "${session}:${name}.3" -p 50 -c "$dir"
-
-  # Send commands
-  tmux send-keys -t "${session}:${name}.0" "nvim ." Enter
-  tmux send-keys -t "${session}:${name}.5" "$tool" Enter
-
-  # Store worktree path as window option
-  tmux set-option -w -t "${session}:${name}" "@worktree_path" "$dir"
-
-  # Focus nvim pane
-  tmux select-pane -t "${session}:${name}.0"
-}
-
-# Scan for worktrees in ~/workspaces/*/
-for gitfile in ~/workspaces/*/.git; do
-  # Only process .git FILES (worktrees), not directories (main repos)
-  [[ -f "$gitfile" ]] || continue
-
-  wt_dir="$(dirname "$gitfile")"
-  wt_basename="$(basename "$wt_dir")"
-
-  # Extract repo name and branch from dir name (format: repo.branch-name)
-  repo_name="${wt_basename%%.*}"
-  branch_part="${wt_basename#*.}"
-
-  # Get actual branch name
-  branch="$(cd "$wt_dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "$branch_part")"
-
-  # Short branch name for tab
-  short_branch="${branch##*/}"
-  tab_name="wt:${repo_name}:${short_branch}"
-
-  # Trust mise if present
-  if [[ -f "$wt_dir/.mise.toml" ]] && command -v mise &>/dev/null; then
-    mise trust "$wt_dir/.mise.toml" 2>/dev/null || true
-  fi
-
-  _create_worktree_tab "$SESSION" "$tab_name" "$wt_dir"
-done
+    for branch in "${branches[@]}"; do
+      [[ -z "$branch" ]] && continue
+      # Open tmux tabs for this worktree (meldr handles the layout)
+      (cd "$ws_dir" && meldr worktree open "$branch" 2>/dev/null) &
+    done
+  done
+  wait
+fi
 
 # Select first window and attach
 tmux select-window -t "${SESSION}:0"
