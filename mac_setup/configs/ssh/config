@@ -1,5 +1,6 @@
 # SSH config managed by mac_setup
-# Host-specific configurations below
+# Local overrides (never committed)
+Include config.local
 
 Host *
     AddKeysToAgent yes

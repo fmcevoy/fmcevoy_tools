@@ -107,6 +107,23 @@ run chmod +x "$SCRIPT_DIR/configs/tmux/start_tmux_dev"
 run chmod +x "$SCRIPT_DIR/configs/tmux/help"
 run chmod +x "$SCRIPT_DIR/cli-upgrades"
 
+# Create empty .local override files (so includes don't fail)
+local_files=(
+  "$HOME/.zshrc.local"
+  "$HOME/.completions.local.zsh"
+  "$HOME/.tmux.conf.local"
+  "$HOME/.config/nvim/init.local.vim"
+  "$HOME/.config/ghostty/config.local"
+  "$HOME/.ssh/config.local"
+)
+for lf in "${local_files[@]}"; do
+  if [[ ! -f "$lf" ]]; then
+    run mkdir -p "$(dirname "$lf")"
+    run touch "$lf"
+    ok "Created $lf"
+  fi
+done
+
 echo ""
 
 # =============================================================================

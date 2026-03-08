@@ -12,9 +12,6 @@ export PATH="/opt/homebrew/bin:$HOME/.pyenv/bin:$HOME/.local/bin:$HOME/go/bin:$H
 # ---------------------------------------------------------------------------
 export EDITOR='nvim'
 export GOPATH="$HOME/go"
-# Default AI agent for tw/twr worktree commands (also used by meldr via MELDR_AGENT)
-export AI_AGENT="${AI_AGENT:-claude --dangerously-skip-permissions}"
-export MELDR_AGENT="${MELDR_AGENT:-claude}"
 
 # Graphviz compilation flags (hardcoded to avoid slow brew --prefix call)
 GRAPHVIZ_PREFIX="/opt/homebrew/opt/graphviz"
@@ -426,6 +423,18 @@ _expand_alias_preexec() {
 
 autoload -Uz add-zsh-hook
 add-zsh-hook preexec _expand_alias_preexec
+
+# ---------------------------------------------------------------------------
+# Defaults (override in ~/.zshrc.local)
+# ---------------------------------------------------------------------------
+export AI_AGENT="${AI_AGENT:-claude --dangerously-skip-permissions}"
+export MELDR_AGENT="${MELDR_AGENT:-claude}"
+
+# ---------------------------------------------------------------------------
+# Local overrides (never committed)
+# ---------------------------------------------------------------------------
+[[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
+[[ -f "$HOME/.completions.local.zsh" ]] && source "$HOME/.completions.local.zsh"
 
 # ---------------------------------------------------------------------------
 # Secrets (never committed)

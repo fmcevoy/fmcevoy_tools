@@ -336,3 +336,10 @@ autocmd FileType nerdtree noremap <buffer> <Up> <Up>
 autocmd FileType nerdtree noremap <buffer> <Down> <Down>
 autocmd FileType nerdtree nmap <buffer> <Left> x
 autocmd FileType nerdtree nmap <buffer> <Right> o
+
+" ---------------------------------------------------------------------------
+" Local overrides (never committed)
+" ---------------------------------------------------------------------------
+if filereadable(expand('~/.config/nvim/init.local.vim'))
+  source ~/.config/nvim/init.local.vim
+endif
