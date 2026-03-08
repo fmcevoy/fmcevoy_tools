@@ -19,6 +19,11 @@ LINES="$(tput lines)"
 # Create session (detached so we can configure before attaching)
 tmux new-session -d -s "$SESSION" -x "$COLS" -y "$LINES"
 
+# Export TMUX so meldr detects a tmux context when recreating worktree windows.
+# Without this, `meldr worktree open` fails with NotInTmux because the script
+# runs outside any tmux client.
+export TMUX=$(tmux display-message -t "${SESSION}" -p '#{socket_path},#{pid},0')
+
 # ---------------------------------------------------------------------------
 # Tab 0: apps (8 panes — 2 columns x 4 rows)
 # ---------------------------------------------------------------------------
