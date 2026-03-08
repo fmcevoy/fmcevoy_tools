@@ -90,7 +90,6 @@ link_file "$SCRIPT_DIR/configs/tmux/start_tmux_dev" "$HOME/start_tmux_dev"
 link_file "$SCRIPT_DIR/configs/tmux/help"           "$HOME/tmux_help"
 link_file "$SCRIPT_DIR/configs/ghostty/config"      "$HOME/.config/ghostty/config"
 link_file "$SCRIPT_DIR/configs/starship.toml"       "$HOME/.config/starship.toml"
-link_file "$SCRIPT_DIR/configs/worktreerc"          "$HOME/.worktreerc"
 link_file "$SCRIPT_DIR/configs/completions.zsh"    "$HOME/.completions.zsh"
 link_file "$SCRIPT_DIR/cli-upgrades"                "$HOME/cli-upgrades"
 
@@ -296,9 +295,27 @@ fi
 echo ""
 
 # =============================================================================
-# Step 10: Secrets template
+# Step 10: meldr (multi-repo workspace manager)
 # =============================================================================
-info "Step 10: Secrets template..."
+info "Step 10: meldr..."
+
+if command -v meldr &>/dev/null; then
+  ok "meldr already installed"
+else
+  if command -v cargo &>/dev/null; then
+    info "Installing meldr via cargo..."
+    run cargo install --git https://github.com/fmcevoy/meldr.git
+    ok "meldr installed"
+  else
+    warn "cargo not found — install rust first, then re-run setup"
+  fi
+fi
+echo ""
+
+# =============================================================================
+# Step 11: Secrets template
+# =============================================================================
+info "Step 11: Secrets template..."
 
 SECRETS_FILE="$HOME/ee"
 if [[ ! -f "$SECRETS_FILE" ]]; then
@@ -320,9 +337,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 11: macOS defaults
+# Step 12: macOS defaults
 # =============================================================================
-info "Step 11: macOS defaults..."
+info "Step 12: macOS defaults..."
 
 if [[ -f "$SCRIPT_DIR/macos_defaults.sh" ]]; then
   run bash "$SCRIPT_DIR/macos_defaults.sh"
@@ -333,9 +350,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 12: Neovim plugins (headless)
+# Step 13: Neovim plugins (headless)
 # =============================================================================
-info "Step 12: Neovim plugins..."
+info "Step 13: Neovim plugins..."
 
 if command -v nvim &>/dev/null; then
   info "Installing Neovim plugins headlessly..."
@@ -347,9 +364,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 13: TPM plugins
+# Step 14: TPM plugins
 # =============================================================================
-info "Step 13: TPM plugins..."
+info "Step 14: TPM plugins..."
 
 TPM_INSTALL="$HOME/.tmux/plugins/tpm/bin/install_plugins"
 if [[ -x "$TPM_INSTALL" ]]; then
@@ -362,9 +379,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 14: Claude Code MCP servers
+# Step 15: Claude Code MCP servers
 # =============================================================================
-info "Step 14: Claude Code MCP servers..."
+info "Step 15: Claude Code MCP servers..."
 
 CLAUDE_DIR="$HOME/.claude"
 CLAUDE_MCP="$CLAUDE_DIR/.mcp.json"
@@ -425,9 +442,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 15: Create gitconfig.local if missing
+# Step 16: Create gitconfig.local if missing
 # =============================================================================
-info "Step 15: Git identity..."
+info "Step 16: Git identity..."
 
 if [[ ! -f "$HOME/.gitconfig.local" ]]; then
   info "Creating ~/.gitconfig.local template..."

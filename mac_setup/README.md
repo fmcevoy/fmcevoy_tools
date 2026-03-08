@@ -28,12 +28,14 @@ cd ~/fmcevoy_tools/mac_setup
 6. **Oh My Zsh** — with plugins: autosuggestions, syntax-highlighting, fzf-tab
 7. **pyenv** — Python version manager
 8. **mise** — polyglot runtime manager
-9. **Secrets template** — `~/ee` (chmod 600, sourced by zshrc)
-10. **macOS defaults** — keyboard repeat, Finder, Dock, trackpad
-11. **Neovim plugins** — headless `:PlugInstall`
-12. **tmux plugins** — TPM install
-13. **Claude Code MCP** — configures MCP servers, injects GitHub token from `gh` CLI
-14. **Git identity** — creates `~/.gitconfig.local` template
+9. **Poetry** — Python dependency manager (v1.x via uv)
+10. **meldr** — multi-repo workspace manager (via `cargo install`)
+11. **Secrets template** — `~/ee` (chmod 600, sourced by zshrc)
+12. **macOS defaults** — keyboard repeat, Finder, Dock, trackpad
+13. **Neovim plugins** — headless `:PlugInstall`
+14. **tmux plugins** — TPM install
+15. **Claude Code MCP** — configures MCP servers, injects GitHub token from `gh` CLI
+16. **Git identity** — creates `~/.gitconfig.local` template
 
 ## Config Files
 
@@ -50,7 +52,6 @@ All configs are symlinked from `configs/` to `$HOME`. If a file already exists a
 | `configs/ssh/config` | `~/.ssh/config` | `~/.ssh/config.local` | `Include` at top |
 | `configs/starship.toml` | `~/.config/starship.toml` | — | No include support |
 | `configs/gitignore_global` | `~/.gitignore` | — | |
-| `configs/worktreerc` | `~/.worktreerc` | — | |
 | `configs/tmux/start_tmux_dev` | `~/start_tmux_dev` | — | |
 | `configs/tmux/help` | `~/tmux_help` | — | |
 | `configs/claude/mcp.json` | `~/.claude/.mcp.json` | — | Copied, not symlinked (secrets injected) |
@@ -75,7 +76,6 @@ Set in zshrc, override in `~/.zshrc.local` or `~/ee`:
 
 | Variable | Default | Used by |
 |----------|---------|---------|
-| `AI_AGENT` | `claude --dangerously-skip-permissions` | `tw`/`twr` worktree commands |
 | `MELDR_AGENT` | `claude` | meldr workspace agent |
 
 ## After Setup

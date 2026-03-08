@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------
 # PATH
 # ---------------------------------------------------------------------------
-export PATH="/opt/homebrew/bin:$HOME/.pyenv/bin:$HOME/.local/bin:$HOME/go/bin:$HOME/bin:/usr/local/bin:$HOME:$PATH"
+export PATH="/opt/homebrew/bin:$HOME/.cargo/bin:$HOME/.pyenv/bin:$HOME/.local/bin:$HOME/go/bin:$HOME/bin:/usr/local/bin:$HOME:$PATH"
 
 # ---------------------------------------------------------------------------
 # Environment
@@ -59,7 +59,7 @@ command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
 # temporal completion (conditional)
 command -v temporal &>/dev/null && eval "$(temporal completion zsh)" 2>/dev/null
 
-# Custom completions (claude, cursor, opencode)
+# Custom completions (claude, cursor, opencode, meldr, etc.)
 [[ -f "$HOME/.completions.zsh" ]] && source "$HOME/.completions.zsh"
 
 # carapace (universal shell completions for 800+ CLIs)
@@ -160,248 +160,9 @@ alias t='~/start_tmux_dev'
 alias tx='tmux kill-server'
 alias tl='tmux ls'
 
-# ---------------------------------------------------------------------------
-# Worktree management
-# ---------------------------------------------------------------------------
-
-# Dim verbose output helper
-_tw_info() { printf '\033[2m  → %s\033[0m\n' "$*"; }
-
-# Create worktree + tmux tab
-# Usage: tw [c|o|cc] <branch> [base]
-tw() {
-  local tool_arg branch base tool
-
-  # Detect if first arg is a tool selector
-  case "${1:-}" in
-    c)  tool="cursor agent --yolo"; shift ;;
-    o)  tool="opencode"; shift ;;
-    cc) tool="claude --dangerously-skip-permissions"; shift ;;
-    *)  tool="$AI_AGENT" ;;
-  esac
-
-  branch="${1:?Usage: tw [c|o|cc] <branch> [base]}"
-  base="${2:-}"
-
-  # Resolve main repo root (works from inside worktrees too)
-  local git_common_dir main_repo repo_name
-  git_common_dir="$(git rev-parse --git-common-dir 2>/dev/null)"
-  if [[ -z "$git_common_dir" || "$git_common_dir" == ".git" ]]; then
-    main_repo="$(pwd)"
-  else
-    main_repo="$(cd "$git_common_dir/.." && pwd)"
-  fi
-  repo_name="$(basename "$main_repo")"
-
-  # Short branch name for tab
-  local short_branch="${branch##*/}"
-  local tab_name="wt:${repo_name}:${short_branch}"
-
-  # If tab already exists, switch to it
-  if tmux list-windows -F '#{window_name}' 2>/dev/null | grep -qF "$tab_name"; then
-    _tw_info "Tab '$tab_name' already exists, switching"
-    tmux select-window -t "$tab_name"
-    return 0
-  fi
-
-  # Worktree directory: sibling of main repo, named repo.branch-with-dashes
-  local wt_branch_safe="${branch//\//-}"
-  local wt_dir="$(dirname "$main_repo")/${repo_name}.${wt_branch_safe}"
-
-  # Create worktree if directory doesn't exist
-  if [[ ! -d "$wt_dir" ]]; then
-    _tw_info "git worktree add $wt_dir -b $branch ${base:-HEAD}"
-    if [[ -n "$base" ]]; then
-      git worktree add "$wt_dir" -b "$branch" "$base" 2>/dev/null || \
-        git worktree add "$wt_dir" "$branch" 2>/dev/null
-    else
-      git worktree add "$wt_dir" -b "$branch" 2>/dev/null || \
-        git worktree add "$wt_dir" "$branch" 2>/dev/null
-    fi
-
-    if [[ $? -ne 0 ]]; then
-      echo "Failed to create worktree"
-      return 1
-    fi
-
-    # Copy dotfiles from .worktreerc
-    if [[ -f "$HOME/.worktreerc" ]]; then
-      while IFS= read -r dotfile || [[ -n "$dotfile" ]]; do
-        [[ -z "$dotfile" || "$dotfile" == \#* ]] && continue
-        if [[ -f "$main_repo/$dotfile" ]]; then
-          cp "$main_repo/$dotfile" "$wt_dir/$dotfile"
-          _tw_info "Copied $dotfile"
-        fi
-      done < "$HOME/.worktreerc"
-    fi
-
-    # Trust mise if present
-    if [[ -f "$wt_dir/.mise.toml" ]] && command -v mise &>/dev/null; then
-      mise trust "$wt_dir/.mise.toml" 2>/dev/null
-      _tw_info "mise trust .mise.toml"
-    fi
-  else
-    _tw_info "Worktree directory exists, opening tab only"
-  fi
-
-  # Create tmux window with 6-pane layout
-  local session
-  session="$(tmux display-message -p '#{session_name}')"
-
-  tmux new-window -t "$session" -n "$tab_name" -c "$wt_dir"
-
-  # Right pane (tool) — 33% width
-  tmux split-window -h -t "${session}:${tab_name}" -p 33 -c "$wt_dir"
-
-  # Split left (pane 0) into top/bottom
-  tmux split-window -v -t "${session}:${tab_name}.0" -p 50 -c "$wt_dir"
-
-  # Split bottom-left into left/right
-  tmux split-window -h -t "${session}:${tab_name}.1" -p 50 -c "$wt_dir"
-
-  # Split bottom-left-top vertically
-  tmux split-window -v -t "${session}:${tab_name}.1" -p 50 -c "$wt_dir"
-
-  # Split bottom-left-bottom vertically
-  tmux split-window -v -t "${session}:${tab_name}.3" -p 50 -c "$wt_dir"
-
-  # Send commands
-  tmux send-keys -t "${session}:${tab_name}.0" "nvim ." Enter
-  tmux send-keys -t "${session}:${tab_name}.5" "$tool" Enter
-
-  # Store worktree path
-  tmux set-option -w -t "${session}:${tab_name}" "@worktree_path" "$wt_dir"
-
-  # Focus nvim pane
-  tmux select-pane -t "${session}:${tab_name}.0"
-
-  _tw_info "Created $tab_name → $wt_dir"
-}
-
-# Close worktree tab (keep worktree on disk)
-twx() {
-  local win="${1:-}"
-  if [[ -n "$win" ]]; then
-    tmux kill-window -t "$win"
-  else
-    tmux kill-window
-  fi
-}
-
-# Close worktree tab AND remove worktree from disk
-twxx() {
-  local win="${1:-}"
-  local wt_path
-
-  if [[ -n "$win" ]]; then
-    wt_path="$(tmux show-option -wv -t "$win" @worktree_path 2>/dev/null)"
-  else
-    wt_path="$(tmux show-option -wv @worktree_path 2>/dev/null)"
-  fi
-
-  # Remove worktree BEFORE killing window (avoid SIGHUP race)
-  if [[ -n "$wt_path" && -d "$wt_path" ]]; then
-    _tw_info "git worktree remove --force $wt_path"
-    git worktree remove --force "$wt_path" 2>/dev/null
-  fi
-
-  if [[ -n "$win" ]]; then
-    tmux kill-window -t "$win"
-  else
-    tmux kill-window
-  fi
-}
-
-# Restore all active worktrees as tmux tabs
-twr() {
-  local tool="${1:-}"
-  local tool_cmd
-  case "$tool" in
-    c)  tool_cmd="cursor agent --yolo" ;;
-    o)  tool_cmd="opencode" ;;
-    cc) tool_cmd="claude --dangerously-skip-permissions" ;;
-    *)  tool_cmd="$AI_AGENT" ;;
-  esac
-
-  for gitfile in ~/workspaces/*/.git; do
-    [[ -f "$gitfile" ]] || continue
-
-    local wt_dir="$(dirname "$gitfile")"
-    local wt_basename="$(basename "$wt_dir")"
-    local repo_name="${wt_basename%%.*}"
-    local branch
-    branch="$(cd "$wt_dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null)"
-    local short_branch="${branch##*/}"
-    local tab_name="wt:${repo_name}:${short_branch}"
-
-    # Skip if tab already exists
-    if tmux list-windows -F '#{window_name}' 2>/dev/null | grep -qF "$tab_name"; then
-      _tw_info "Skip $tab_name (already open)"
-      continue
-    fi
-
-    _tw_info "Restoring $tab_name"
-
-    local session
-    session="$(tmux display-message -p '#{session_name}')"
-
-    tmux new-window -t "$session" -n "$tab_name" -c "$wt_dir"
-    tmux split-window -h -t "${session}:${tab_name}" -p 33 -c "$wt_dir"
-    tmux split-window -v -t "${session}:${tab_name}.0" -p 50 -c "$wt_dir"
-    tmux split-window -h -t "${session}:${tab_name}.1" -p 50 -c "$wt_dir"
-    tmux split-window -v -t "${session}:${tab_name}.1" -p 50 -c "$wt_dir"
-    tmux split-window -v -t "${session}:${tab_name}.3" -p 50 -c "$wt_dir"
-
-    tmux send-keys -t "${session}:${tab_name}.0" "nvim ." Enter
-    tmux send-keys -t "${session}:${tab_name}.5" "$tool_cmd" Enter
-    tmux set-option -w -t "${session}:${tab_name}" "@worktree_path" "$wt_dir"
-    tmux select-pane -t "${session}:${tab_name}.0"
-  done
-}
-
-# List all active worktrees grouped by repo
-twp() {
-  local grn='\033[32m'
-  local dim='\033[2m'
-  local rst='\033[0m'
-  local current_repo=""
-
-  for gitfile in ~/workspaces/*/.git; do
-    [[ -f "$gitfile" ]] || continue
-
-    local wt_dir="$(dirname "$gitfile")"
-    local wt_basename="$(basename "$wt_dir")"
-    local repo_name="${wt_basename%%.*}"
-    local branch
-    branch="$(cd "$wt_dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")"
-    local short_branch="${branch##*/}"
-    local tab_name="wt:${repo_name}:${short_branch}"
-
-    if [[ "$repo_name" != "$current_repo" ]]; then
-      [[ -n "$current_repo" ]] && echo ""
-      echo "$repo_name"
-      current_repo="$repo_name"
-    fi
-
-    local tab_status=""
-    if tmux list-windows -F '#{window_name}' 2>/dev/null | grep -qF "$tab_name"; then
-      tab_status="${grn}[tab open]${rst}"
-    fi
-
-    printf "  %s  ${dim}%s${rst}  %b\n" "$wt_basename" "$branch" "$tab_status"
-  done
-}
-
-# Headless cursor
+# Headless agents
 alias ch='cursor agent -p --force --output-format stream-json --stream-partial-output'
 cch() { claude -p --dangerously-skip-permissions "$*"; }
-
-# wt* aliases (mirror tw* functions)
-alias wt='tw'
-alias wtx='twx'
-alias wtxx='twxx'
-alias wtr='twr'
-alias wtp='twp'
 
 # ---------------------------------------------------------------------------
 # Help
@@ -427,7 +188,6 @@ add-zsh-hook preexec _expand_alias_preexec
 # ---------------------------------------------------------------------------
 # Defaults (override in ~/.zshrc.local)
 # ---------------------------------------------------------------------------
-export AI_AGENT="${AI_AGENT:-claude --dangerously-skip-permissions}"
 export MELDR_AGENT="${MELDR_AGENT:-claude}"
 
 # ---------------------------------------------------------------------------

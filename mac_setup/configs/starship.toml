@@ -86,7 +86,8 @@ disabled = true
 disabled = true
 
 [custom.meldr]
-command = "awk -F'\"' '/^name/{print $2}' meldr.toml"
+command = "d=$PWD; while [ \"$d\" != / ]; do [ -f \"$d/meldr.toml\" ] && awk -F'\"' '/^name/{print $2}' \"$d/meldr.toml\" && break; d=$(dirname \"$d\"); done"
+detect_folders = ["packages", "worktrees"]
 detect_files = ["meldr.toml"]
 symbol = "⚙ "
 style = "bold 208"

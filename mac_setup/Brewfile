@@ -57,6 +57,7 @@ brew "go"
 brew "mise"
 brew "node"
 brew "python@3.12"
+brew "rust"
 brew "uv"
 brew "virtualenv"
 

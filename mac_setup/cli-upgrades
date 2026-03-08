@@ -4,7 +4,7 @@
 # =============================================================================
 # Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
 # Sections: brew, npm, pip, poetry, go, mise, pyenv, omz, zsh-plugins,
-#           tpm, nvim, claude, codex, mcporter, openclaw
+#           tpm, nvim, claude, codex, mcporter
 set -uo pipefail
 
 DRY_RUN=false
@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
     --skip)     SKIP="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
-      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude codex mcporter openclaw"
+      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude codex mcporter"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -184,21 +184,6 @@ if should_run "mcporter" && command -v npm &>/dev/null; then
     skip "mcporter not installed globally"
   fi
 elif should_run "mcporter"; then
-  skip "npm not found"
-fi
-
-# ---------------------------------------------------------------------------
-# openclaw (npm)
-# ---------------------------------------------------------------------------
-if should_run "openclaw" && command -v npm &>/dev/null; then
-  section "openclaw"
-  if npm list -g openclaw &>/dev/null; then
-    try_upgrade "openclaw" run npm install -g openclaw@latest
-    ok "openclaw done"
-  else
-    skip "openclaw not installed globally"
-  fi
-elif should_run "openclaw"; then
   skip "npm not found"
 fi
 
