@@ -91,6 +91,7 @@ link_file "$SCRIPT_DIR/configs/tmux/help"           "$HOME/tmux_help"
 link_file "$SCRIPT_DIR/configs/ghostty/config"      "$HOME/.config/ghostty/config"
 link_file "$SCRIPT_DIR/configs/starship.toml"       "$HOME/.config/starship.toml"
 link_file "$SCRIPT_DIR/configs/worktreerc"          "$HOME/.worktreerc"
+link_file "$SCRIPT_DIR/configs/completions.zsh"    "$HOME/.completions.zsh"
 link_file "$SCRIPT_DIR/cli-upgrades"                "$HOME/cli-upgrades"
 
 # SSH config (ensure directory permissions)

@@ -12,6 +12,9 @@ export PATH="/opt/homebrew/bin:$HOME/.pyenv/bin:$HOME/.local/bin:$HOME/go/bin:$H
 # ---------------------------------------------------------------------------
 export EDITOR='nvim'
 export GOPATH="$HOME/go"
+# Default AI agent for tw/twr worktree commands (also used by meldr via MELDR_AGENT)
+export AI_AGENT="${AI_AGENT:-claude --dangerously-skip-permissions}"
+export MELDR_AGENT="${MELDR_AGENT:-claude}"
 
 # Graphviz compilation flags (hardcoded to avoid slow brew --prefix call)
 GRAPHVIZ_PREFIX="/opt/homebrew/opt/graphviz"
@@ -58,6 +61,22 @@ command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
 
 # temporal completion (conditional)
 command -v temporal &>/dev/null && eval "$(temporal completion zsh)" 2>/dev/null
+
+# Custom completions (claude, cursor, opencode)
+[[ -f "$HOME/.completions.zsh" ]] && source "$HOME/.completions.zsh"
+
+# carapace (universal shell completions for 800+ CLIs)
+if command -v carapace &>/dev/null; then
+  export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense'
+  zstyle ':completion:*' format $'\e[2;37mCompleting %d\e[m'
+  local _carapace_cache="$HOME/.cache/carapace/init.zsh"
+  local _carapace_bin="$(command -v carapace)"
+  if [[ ! -f "$_carapace_cache" || "$_carapace_bin" -nt "$_carapace_cache" ]]; then
+    mkdir -p "${_carapace_cache:h}"
+    carapace _carapace zsh > "$_carapace_cache" 2>/dev/null
+  fi
+  source "$_carapace_cache"
+fi
 
 # starship prompt (MUST be last — installs precmd hook)
 command -v starship &>/dev/null && eval "$(starship init zsh)"
@@ -161,7 +180,7 @@ tw() {
     c)  tool="cursor agent --yolo"; shift ;;
     o)  tool="opencode"; shift ;;
     cc) tool="claude --dangerously-skip-permissions"; shift ;;
-    *)  tool="claude --dangerously-skip-permissions" ;;
+    *)  tool="$AI_AGENT" ;;
   esac
 
   branch="${1:?Usage: tw [c|o|cc] <branch> [base]}"
@@ -298,13 +317,13 @@ twxx() {
 
 # Restore all active worktrees as tmux tabs
 twr() {
-  local tool="${1:-c}"
+  local tool="${1:-}"
   local tool_cmd
   case "$tool" in
     c)  tool_cmd="cursor agent --yolo" ;;
     o)  tool_cmd="opencode" ;;
     cc) tool_cmd="claude --dangerously-skip-permissions" ;;
-    *)  tool_cmd="claude --dangerously-skip-permissions" ;;
+    *)  tool_cmd="$AI_AGENT" ;;
   esac
 
   for gitfile in ~/workspaces/*/.git; do

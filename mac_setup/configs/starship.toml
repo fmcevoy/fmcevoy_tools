@@ -1,4 +1,5 @@
 format = """
+${custom.meldr}\
 $directory\
 $git_branch\
 $git_status\
@@ -6,7 +7,6 @@ $golang\
 $python\
 $terraform\
 $docker_context\
-$aws\
 $cmd_duration\
 $line_break\
 $character"""
@@ -63,8 +63,7 @@ symbol = " "
 only_with_files = true
 
 [aws]
-symbol = "☁️  "
-format = '[$symbol($profile)(\($region\))]($style) '
+disabled = true
 
 [cmd_duration]
 min_time = 2000
@@ -85,3 +84,10 @@ disabled = true
 
 [php]
 disabled = true
+
+[custom.meldr]
+command = "awk -F'\"' '/^name/{print $2}' meldr.toml"
+detect_files = ["meldr.toml"]
+symbol = "⚙ "
+style = "bold 208"
+format = "[$symbol$output]($style) "

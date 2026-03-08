@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(meldr --help 2>&1 | head -40)",
+      "Bash(meldr status)",
+      "Read(//Users/fintanmcevoy/workspaces/**)",
+      "Read(//Users/fintanmcevoy/**)",
+      "Bash(claude completion 2>&1 | head -20)",
+      "Bash(carapace _carapace zsh 2>/dev/null | head -30)",
+      "Bash(carapace _carapace zsh 2>&1 | head -30)",
+      "Bash(carapace --list 2>&1)"
+    ]
+  }
+}
