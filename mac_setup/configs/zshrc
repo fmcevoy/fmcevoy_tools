@@ -161,10 +161,33 @@ alias t='~/start_tmux_dev'
 alias tx='tmux kill-server'
 alias tl='tmux ls'
 
-# Worktree prompt color: cycle through 10 colors
+# Worktree prompt color: set per-worktree color
+# Usage: wtc          — show current color
+#        wtc green    — set by name (red orange yellow green cyan blue purple pink amber light)
+#        wtc 196      — set by 256-color code
+#        wtc reset    — remove override, use hash-derived color
 wtc() {
-  local colors=(196 208 226 46 51 33 93 201 214 159)
-  echo "${colors[$((RANDOM % 10 + 1))]}" > ~/.meldr_wt_color
+  local -A named=(red 196 orange 208 yellow 226 green 46 cyan 51 blue 33 purple 93 pink 201 amber 214 light 159)
+  local wt
+  wt=$(basename "$(git worktree list --porcelain 2>/dev/null | head -1 | awk '{print $2}')" 2>/dev/null)
+  if [ -z "$1" ]; then
+    local cur; cur=$(cat ~/.meldr_wt_color_"$wt" 2>/dev/null)
+    if [ -n "$cur" ]; then echo "worktree '$wt' color: $cur (override)"
+    else echo "worktree '$wt' color: hash-derived"; fi
+    return
+  fi
+  if [ "$1" = "reset" ]; then
+    rm -f ~/.meldr_wt_color_"$wt"
+    echo "Reset '$wt' to hash-derived color"
+    return
+  fi
+  local code="${named[$1]:-$1}"
+  if ! [[ "$code" =~ ^[0-9]+$ ]]; then
+    echo "Unknown color '$1'. Valid names: ${(kj: :)named}"
+    return 1
+  fi
+  echo "$code" > ~/.meldr_wt_color_"$wt"
+  echo "Set '$wt' color to $code"
 }
 
 # Headless agents
