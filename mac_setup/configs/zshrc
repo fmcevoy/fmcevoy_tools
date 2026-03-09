@@ -87,7 +87,7 @@ alias vim='nvim'
 alias du='duf'
 alias dig='doggo'
 alias ack='ag'
-alias md='glow'
+alias md='glow -p'
 
 # ---------------------------------------------------------------------------
 # Handy aliases
