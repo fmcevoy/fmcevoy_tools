@@ -89,4 +89,5 @@ disabled = true
 command = "~/.config/meldr_prompt.sh"
 when = "d=$PWD; while [ \"$d\" != / ]; do [ -f \"$d/meldr.toml\" ] && exit 0; d=$(dirname \"$d\"); done; exit 1"
 format = "$output "
+unsafe_no_escape = true
 ignore_timeout = true
