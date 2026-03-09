@@ -160,6 +160,12 @@ alias t='~/start_tmux_dev'
 alias tx='tmux kill-server'
 alias tl='tmux ls'
 
+# Worktree prompt color: cycle through 10 colors
+wtc() {
+  local colors=(196 208 226 46 51 33 93 201 214 159)
+  echo "${colors[$((RANDOM % 10 + 1))]}" > ~/.meldr_wt_color
+}
+
 # Headless agents
 alias ch='cursor agent -p --force --output-format stream-json --stream-partial-output'
 cch() { claude -p --dangerously-skip-permissions "$*"; }

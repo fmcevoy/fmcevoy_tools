@@ -86,8 +86,7 @@ disabled = true
 disabled = true
 
 [custom.meldr]
-command = """d=$PWD; ws=""; wsdir=""; while [ "$d" != / ]; do [ -f "$d/meldr.toml" ] && ws=$(awk -F'"' '/^name/{print $2; exit}' "$d/meldr.toml") && wsdir="$d" && break; d=$(dirname "$d"); done; if [ -n "$ws" ]; then rel="${PWD#"$wsdir/worktrees/"}"; if [ "$rel" != "$PWD" ]; then wt="${rel%%/*}"; echo "$ws/$wt"; else echo "$ws"; fi; fi"""
+command = "~/.config/meldr_prompt.sh"
 when = "d=$PWD; while [ \"$d\" != / ]; do [ -f \"$d/meldr.toml\" ] && exit 0; d=$(dirname \"$d\"); done; exit 1"
-symbol = "⚙ "
-style = "bold 208"
-format = "[$symbol$output]($style) "
+format = "$output "
+ignore_timeout = true
