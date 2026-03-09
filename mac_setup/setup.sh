@@ -282,24 +282,21 @@ info "Step 9: Poetry..."
 if brew list poetry &>/dev/null; then
   warn "Removing Homebrew poetry (v2) — we pin to v1 via uv"
   run brew uninstall --ignore-dependencies poetry
+  hash -r 2>/dev/null || true
 fi
 
-if command -v poetry &>/dev/null; then
-  POETRY_VER="$(poetry --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+' | head -1 || true)"
-  POETRY_MAJOR="${POETRY_VER%%.*}"
-  if [[ "$POETRY_MAJOR" == "2" ]]; then
-    warn "Poetry v2 detected — reinstalling as v1.x"
-    run uv tool install "poetry>=1,<2" --force
-    ok "Poetry v1 installed"
-  else
-    ok "Poetry v1 already installed — upgrading to latest v1"
-    run uv tool upgrade "poetry>=1,<2"
-    ok "Poetry v1 up to date"
-  fi
+# Always force-install v1 via uv to ensure it wins on PATH
+run uv tool install "poetry>=1,<2" --force
+hash -r 2>/dev/null || true
+
+# Verify
+POETRY_FINAL="$(poetry --version 2>/dev/null || true)"
+POETRY_MAJOR="$(echo "$POETRY_FINAL" | grep -oE '[0-9]+' | head -1 || true)"
+if [[ "$POETRY_MAJOR" == "1" ]]; then
+  ok "Poetry pinned to v1 ($POETRY_FINAL)"
 else
-  info "Installing Poetry v1.x..."
-  run uv tool install "poetry>=1,<2"
-  ok "Poetry v1 installed"
+  error "Poetry version check failed: $POETRY_FINAL"
+  error "Expected v1.x — check PATH ordering (~/.local/bin must come before /opt/homebrew/bin)"
 fi
 echo ""
 
