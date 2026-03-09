@@ -83,6 +83,8 @@ command -v starship &>/dev/null && eval "$(starship init zsh)"
 # ---------------------------------------------------------------------------
 alias ls='eza -al'
 alias cat='bat'
+export LESSOPEN="| bat --color=always --style=plain %s"
+export LESS="-R"
 alias vim='nvim'
 alias du='duf'
 alias dig='doggo'
