@@ -278,6 +278,12 @@ echo ""
 # =============================================================================
 info "Step 9: Poetry..."
 
+# Remove brew poetry if present (brew only has v2, we need v1)
+if brew list poetry &>/dev/null; then
+  warn "Removing Homebrew poetry (v2) — we pin to v1 via uv"
+  run brew uninstall --ignore-dependencies poetry
+fi
+
 if command -v poetry &>/dev/null; then
   POETRY_VER="$(poetry --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+' | head -1 || true)"
   POETRY_MAJOR="${POETRY_VER%%.*}"
@@ -286,7 +292,9 @@ if command -v poetry &>/dev/null; then
     run uv tool install "poetry>=1,<2" --force
     ok "Poetry v1 installed"
   else
-    ok "Poetry v1 already installed"
+    ok "Poetry v1 already installed — upgrading to latest v1"
+    run uv tool upgrade "poetry>=1,<2"
+    ok "Poetry v1 up to date"
   fi
 else
   info "Installing Poetry v1.x..."

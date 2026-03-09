@@ -201,11 +201,26 @@ fi
 # ---------------------------------------------------------------------------
 # Poetry
 # ---------------------------------------------------------------------------
-if should_run "poetry" && command -v poetry &>/dev/null; then
+if should_run "poetry"; then
   section "Poetry"
-  dim "Poetry binary managed by Homebrew (upgraded above)"
-  dim "$(poetry --version)"
-  ok "Poetry done"
+  # Remove brew poetry if present (brew only has v2, we pin to v1 via uv)
+  if brew list poetry &>/dev/null; then
+    warn "Removing Homebrew poetry (v2) — we pin to v1 via uv"
+    run brew uninstall --ignore-dependencies poetry
+  fi
+  if command -v poetry &>/dev/null; then
+    POETRY_MAJOR="$(poetry --version 2>/dev/null | grep -oE '^Poetry \(version [0-9]+' | grep -oE '[0-9]+' || true)"
+    if [[ "$POETRY_MAJOR" == "2" ]]; then
+      warn "Poetry v2 detected — reinstalling as v1.x"
+      run uv tool install "poetry>=1,<2" --force
+    else
+      run uv tool upgrade "poetry>=1,<2"
+    fi
+  else
+    run uv tool install "poetry>=1,<2"
+  fi
+  dim "$(poetry --version 2>/dev/null)"
+  ok "Poetry v1 up to date"
 fi
 
 # ---------------------------------------------------------------------------
