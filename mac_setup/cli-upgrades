@@ -4,7 +4,7 @@
 # =============================================================================
 # Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
 # Sections: brew, npm, pip, poetry, go, mise, pyenv, omz, zsh-plugins,
-#           tpm, nvim, claude, codex, mcporter, meldr
+#           tpm, nvim, claude, codex, mcporter, meldr, flyctl, vercel, supabase
 set -uo pipefail
 
 DRY_RUN=false
@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
     --skip)     SKIP="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
-      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude codex mcporter meldr"
+      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude codex mcporter meldr flyctl vercel supabase"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -115,6 +115,9 @@ capture_all_versions() {
   command -v codex &>/dev/null   && versions_ref[codex]="$(safe_version 'codex --version')"
   command -v opencode &>/dev/null && versions_ref[opencode]="$(safe_version 'opencode --version')"
   command -v meldr &>/dev/null    && versions_ref[meldr]="$(safe_version 'meldr --version')"
+  command -v flyctl &>/dev/null   && versions_ref[flyctl]="$(safe_version 'flyctl version')"
+  command -v vercel &>/dev/null   && versions_ref[vercel]="$(safe_version 'vercel --version')"
+  command -v supabase &>/dev/null && versions_ref[supabase]="$(safe_version 'supabase --version')"
   command -v cursor &>/dev/null  && versions_ref[cursor]="$(safe_version 'cursor --version')"
   # claude --version hangs (TUI), use npm instead
   command -v npm &>/dev/null     && versions_ref[claude]="$(safe_version "npm list -g @anthropic-ai/claude-code 2>/dev/null | grep claude-code | sed 's/.*@//'")"
@@ -345,6 +348,44 @@ if should_run "meldr" && command -v cargo &>/dev/null; then
   ok "meldr done"
 elif should_run "meldr"; then
   skip "cargo not found (needed for meldr)"
+fi
+
+# ---------------------------------------------------------------------------
+# Fly CLI (official installer)
+# ---------------------------------------------------------------------------
+if should_run "flyctl" && command -v flyctl &>/dev/null; then
+  section "Fly CLI"
+  try_upgrade "flyctl" run flyctl version upgrade
+  ok "Fly CLI done"
+elif should_run "flyctl"; then
+  skip "flyctl not found"
+fi
+
+# ---------------------------------------------------------------------------
+# Vercel CLI (npm global)
+# ---------------------------------------------------------------------------
+if should_run "vercel" && command -v npm &>/dev/null; then
+  section "Vercel CLI"
+  if npm list -g vercel &>/dev/null; then
+    try_upgrade "vercel" run npm install -g vercel@latest
+    ok "Vercel CLI done"
+  else
+    skip "vercel not installed globally"
+  fi
+elif should_run "vercel"; then
+  skip "npm not found (needed for vercel)"
+fi
+
+# ---------------------------------------------------------------------------
+# Supabase CLI (brew — upgraded in Homebrew section above)
+# ---------------------------------------------------------------------------
+if should_run "supabase" && command -v supabase &>/dev/null; then
+  section "Supabase CLI"
+  dim "Supabase CLI is managed by Homebrew (upgraded above)"
+  dim "$(supabase --version)"
+  ok "Supabase CLI done"
+elif should_run "supabase"; then
+  skip "supabase not found"
 fi
 
 # ---------------------------------------------------------------------------

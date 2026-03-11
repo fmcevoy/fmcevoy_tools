@@ -14,6 +14,7 @@ tap "earthly/earthly"
 tap "gjbae1212/gossm"
 tap "hashicorp/tap"
 tap "kdash-rs/kdash"
+tap "supabase/tap"
 
 # ---------------------------------------------------------------------------
 # Core CLI
@@ -82,6 +83,7 @@ brew "blendle/blendle/kns"
 brew "common-fate/granted/granted"
 brew "gjbae1212/gossm/gossm"
 brew "kdash-rs/kdash/kdash"
+brew "supabase/tap/supabase"
 
 # ---------------------------------------------------------------------------
 # Build tools
@@ -107,7 +109,6 @@ brew "redis"
 # ---------------------------------------------------------------------------
 cask "1password-cli"
 cask "claude-code"
-cask "docker-desktop"
 cask "font-jetbrains-mono-nerd-font"
 cask "git-credential-manager"
 cask "orbstack"

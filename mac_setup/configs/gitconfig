@@ -43,3 +43,6 @@
 	s = status
 	st = stash
 	ca = commit --amend --no-edit
+[user]
+	email = fintan.mcevoy@gmail.com
+	name = Fintan McEvoy

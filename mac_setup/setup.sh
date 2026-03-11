@@ -315,9 +315,45 @@ fi
 echo ""
 
 # =============================================================================
-# Step 11: Secrets template
+# Step 11: Fly CLI (official installer)
 # =============================================================================
-info "Step 11: Secrets template..."
+info "Step 11: Fly CLI..."
+
+if command -v flyctl &>/dev/null || [[ -x "$HOME/.fly/bin/flyctl" ]]; then
+  ok "Fly CLI already installed ($(flyctl version 2>/dev/null || $HOME/.fly/bin/flyctl version 2>/dev/null || echo 'unknown'))"
+else
+  info "Installing Fly CLI..."
+  if $DRY_RUN; then
+    skip "[dry-run] curl -L https://fly.io/install.sh | sh"
+  else
+    curl -L https://fly.io/install.sh | sh
+  fi
+  ok "Fly CLI installed"
+fi
+echo ""
+
+# =============================================================================
+# Step 12: Vercel CLI (npm global)
+# =============================================================================
+info "Step 12: Vercel CLI..."
+
+if command -v npm &>/dev/null; then
+  if npm list -g vercel &>/dev/null; then
+    ok "Vercel CLI already installed ($(vercel --version 2>/dev/null || echo 'unknown'))"
+  else
+    info "Installing Vercel CLI via npm..."
+    run npm install -g vercel
+    ok "Vercel CLI installed"
+  fi
+else
+  warn "npm not found — install node first, then re-run setup"
+fi
+echo ""
+
+# =============================================================================
+# Step 13: Secrets template
+# =============================================================================
+info "Step 13: Secrets template..."
 
 SECRETS_FILE="$HOME/ee"
 if [[ ! -f "$SECRETS_FILE" ]]; then
@@ -339,9 +375,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 12: macOS defaults
+# Step 14: macOS defaults
 # =============================================================================
-info "Step 12: macOS defaults..."
+info "Step 14: macOS defaults..."
 
 if [[ -f "$SCRIPT_DIR/macos_defaults.sh" ]]; then
   run bash "$SCRIPT_DIR/macos_defaults.sh"
@@ -352,9 +388,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 13: Neovim plugins (headless)
+# Step 15: Neovim plugins (headless)
 # =============================================================================
-info "Step 13: Neovim plugins..."
+info "Step 15: Neovim plugins..."
 
 if command -v nvim &>/dev/null; then
   info "Installing Neovim plugins headlessly..."
@@ -366,9 +402,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 14: TPM plugins
+# Step 16: TPM plugins
 # =============================================================================
-info "Step 14: TPM plugins..."
+info "Step 16: TPM plugins..."
 
 TPM_INSTALL="$HOME/.tmux/plugins/tpm/bin/install_plugins"
 if [[ -x "$TPM_INSTALL" ]]; then
@@ -381,9 +417,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 15: Claude Code MCP servers
+# Step 17: Claude Code MCP servers
 # =============================================================================
-info "Step 15: Claude Code MCP servers..."
+info "Step 17: Claude Code MCP servers..."
 
 CLAUDE_DIR="$HOME/.claude"
 CLAUDE_MCP="$CLAUDE_DIR/.mcp.json"
@@ -444,9 +480,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 16: Create gitconfig.local if missing
+# Step 18: Create gitconfig.local if missing
 # =============================================================================
-info "Step 16: Git identity..."
+info "Step 18: Git identity..."
 
 if [[ ! -f "$HOME/.gitconfig.local" ]]; then
   info "Creating ~/.gitconfig.local template..."
