@@ -109,6 +109,7 @@ brew "redis"
 # ---------------------------------------------------------------------------
 cask "1password-cli"
 cask "claude-code"
+cask "drawio"
 cask "font-jetbrains-mono-nerd-font"
 cask "git-credential-manager"
 cask "orbstack"

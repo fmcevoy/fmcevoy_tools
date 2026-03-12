@@ -17,5 +17,10 @@ if [ -n "$ws" ]; then
       set -- $colors; shift $((hash % 10)); c=$1
     fi
     printf '\033[1;38;5;%sm/%s\033[0m' "$c" "$wt"
+    # Check if git branch matches worktree directory
+    warn=$(meldr prompt-check 2>&1)
+    if [ -n "$warn" ]; then
+      printf ' \033[1;38;5;196m%s\033[0m' "$warn"
+    fi
   fi
 fi
