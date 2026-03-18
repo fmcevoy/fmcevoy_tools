@@ -14,6 +14,7 @@ tap "earthly/earthly"
 tap "gjbae1212/gossm"
 tap "hashicorp/tap"
 tap "kdash-rs/kdash"
+tap "steipete/tap"
 tap "supabase/tap"
 
 # ---------------------------------------------------------------------------
@@ -109,6 +110,8 @@ brew "redis"
 # ---------------------------------------------------------------------------
 cask "1password-cli"
 cask "claude-code"
+cask "kiro-cli"
+cask "steipete/tap/codexbar"
 cask "drawio"
 cask "font-jetbrains-mono-nerd-font"
 cask "git-credential-manager"

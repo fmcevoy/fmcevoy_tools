@@ -90,6 +90,8 @@ alias du='duf'
 alias dig='doggo'
 alias ack='ag'
 alias md='glow -p'
+alias medlr='meldr'
+alias m='meldr'
 
 # ---------------------------------------------------------------------------
 # Handy aliases
@@ -195,6 +197,10 @@ wtc() {
 # Headless agents
 alias ch='cursor agent -p --force --output-format stream-json --stream-partial-output'
 cch() { claude -p --dangerously-skip-permissions "$*"; }
+gch() { gemini -p -y "$*"; }
+xch() { codex exec --dangerously-bypass-approvals-and-sandbox "$*"; }
+pch() { pi -p "$*"; }
+kch() { kiro-cli chat --no-interactive --trust-all-tools "$*"; }
 
 # ---------------------------------------------------------------------------
 # Help

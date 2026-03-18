@@ -204,6 +204,221 @@ _cursor() {
 compdef _cursor cursor
 
 # ---------------------------------------------------------------------------
+# gemini
+# ---------------------------------------------------------------------------
+_gemini() {
+  local -a commands=(
+    'extensions:Manage extensions (install, uninstall, update, enable, disable)'
+    'mcp:Configure MCP servers (add, remove, list)'
+    'skills:Manage agent skills (list, install, link, uninstall)'
+    'update:Update to latest version'
+  )
+
+  local -a options=(
+    '(-d --debug)'{-d,--debug}'[Run in debug mode with verbose logging]'
+    '(-e --extensions)'{-e,--extensions}'[Specify extensions to use]:extensions:'
+    '(-h --help)'{-h,--help}'[Show help]'
+    '(-i --prompt-interactive)'{-i,--prompt-interactive}'[Execute prompt then remain in interactive mode]:prompt:'
+    '(-l --list-extensions)'{-l,--list-extensions}'[Display all available extensions]'
+    '--list-sessions[Show available sessions for current project]'
+    '--delete-session[Remove a session by index]:index:'
+    '(-m --model)'{-m,--model}'[Model to use]:model:'
+    '(-o --output-format)'{-o,--output-format}'[Output format]:format:(text json stream-json)'
+    '(-p --prompt)'{-p,--prompt}'[Prompt text (non-interactive mode)]:prompt:'
+    '(-r --resume)'{-r,--resume}'[Resume a previous session]:session:'
+    '(-s --sandbox)'{-s,--sandbox}'[Run in sandboxed environment]'
+    '--approval-mode[Approval mode]:mode:(default auto_edit yolo plan)'
+    '(-y --yolo)'{-y,--yolo}'[Auto-accept all actions (YOLO mode)]'
+    '--include-directories[Additional workspace directories]:dirs:'
+    '--policy[Additional policy files]:files:'
+    '(-v --version)'{-v,--version}'[Show version]'
+  )
+
+  _arguments -s -S \
+    '1: :->cmd_or_prompt' \
+    '*: :->args' && return 0
+
+  case "$state" in
+    cmd_or_prompt)
+      _describe 'command' commands
+      _arguments -s -S $options
+      ;;
+    args)
+      _arguments -s -S $options
+      ;;
+  esac
+}
+compdef _gemini gemini
+
+# ---------------------------------------------------------------------------
+# codex (OpenAI)
+# ---------------------------------------------------------------------------
+_codex() {
+  local -a commands=(
+    'exec:Run non-interactively without human input'
+    'resume:Continue an interactive session'
+    'fork:Fork a previous session into a new thread'
+    'mcp:Manage MCP servers (list, add, remove)'
+    'mcp-server:Run Codex as an MCP server over stdio'
+    'cloud:Submit and manage Codex Cloud tasks'
+    'apply:Apply diff from cloud task to local repo'
+    'login:Authenticate via OAuth or API key'
+    'logout:Remove stored credentials'
+    'features:List, enable, or disable feature flags'
+    'completion:Generate shell completion scripts'
+    'sandbox:Run commands under sandbox policy'
+  )
+
+  local -a options=(
+    '(-a --ask-for-approval)'{-a,--ask-for-approval}'[Approval mode]:mode:(untrusted on-request never)'
+    '(-C --cd)'{-C,--cd}'[Working directory]:dir:_files -/'
+    '(-c --config)'{-c,--config}'[Override config value]:key=value:'
+    '--full-auto[On-request approvals + workspace-write sandbox]'
+    '(-h --help)'{-h,--help}'[Show help]'
+    '(-i --image)'{-i,--image}'[Attach image files]:images:_files'
+    '(-m --model)'{-m,--model}'[Override model]:model:'
+    '--no-alt-screen[Disable alternate screen for TUI]'
+    '--oss[Use local open source provider (Ollama)]'
+    '(-p --profile)'{-p,--profile}'[Load config profile]:profile:'
+    '(-s --sandbox)'{-s,--sandbox}'[Sandbox policy]:policy:(read-only workspace-write danger-full-access)'
+    '--search[Enable live web search]'
+    '(-v --version)'{-v,--version}'[Show version]'
+    '--dangerously-bypass-approvals-and-sandbox[Run without approvals or sandboxing]'
+    '--full-auto[Low-friction sandboxed automatic execution]'
+    '--add-dir[Grant additional directory write access]:dir:_files -/'
+  )
+
+  _arguments -s -S \
+    '1: :->cmd_or_prompt' \
+    '*: :->args' && return 0
+
+  case "$state" in
+    cmd_or_prompt)
+      _describe 'command' commands
+      _arguments -s -S $options
+      ;;
+    args)
+      _arguments -s -S $options
+      ;;
+  esac
+}
+compdef _codex codex
+
+# ---------------------------------------------------------------------------
+# pi (coding agent)
+# ---------------------------------------------------------------------------
+_pi() {
+  local -a commands=(
+    'install:Install a package (npm, git, or URL)'
+    'remove:Remove an installed package'
+    'list:List installed packages'
+    'update:Update non-pinned packages'
+  )
+
+  local -a options=(
+    '--api-key[API key override]:key:'
+    '--append-system-prompt[Append to system prompt]:text:'
+    '(-c --continue)'{-c,--continue}'[Continue most recent session]'
+    '(-e --extension)'{-e,--extension}'[Load extension]:source:_files'
+    '--export[Export session to HTML]:file:_files'
+    '(-h --help)'{-h,--help}'[Show help]'
+    '--list-models[List available models]::search:'
+    '(-m --model)'{-m,--model}'[Model to use]:model:'
+    '--models[Comma-separated model patterns for cycling]:patterns:'
+    '--mode[Output mode]:mode:(json rpc)'
+    '--no-extensions[Disable extension discovery]'
+    '--no-session[Ephemeral mode]'
+    '--no-skills[Disable skill discovery]'
+    '--no-tools[Disable all built-in tools]'
+    '--offline[Disable network operations]'
+    '(-p --print)'{-p,--print}'[Print mode (non-interactive)]'
+    '--prompt-template[Load prompt template]:path:_files'
+    '--provider[Select provider]:provider:(anthropic openai google)'
+    '(-r --resume)'{-r,--resume}'[Browse and select past sessions]'
+    '--session[Use specific session file]:path:_files'
+    '--session-dir[Custom session storage]:dir:_files -/'
+    '--skill[Load skill]:path:_files'
+    '--system-prompt[Replace system prompt]:text:'
+    '--theme[Load theme]:path:_files'
+    '--thinking[Reasoning level]:level:(off minimal low medium high xhigh)'
+    '--tools[Enable specific tools]:tools:'
+    '--verbose[Verbose startup]'
+    '(-v --version)'{-v,--version}'[Show version]'
+  )
+
+  _arguments -s -S \
+    '1: :->cmd_or_prompt' \
+    '*: :->args' && return 0
+
+  case "$state" in
+    cmd_or_prompt)
+      _describe 'command' commands
+      _arguments -s -S $options
+      ;;
+    args)
+      _arguments -s -S $options
+      ;;
+  esac
+}
+compdef _pi pi
+
+# ---------------------------------------------------------------------------
+# kiro-cli (AWS/Kiro)
+# ---------------------------------------------------------------------------
+_kiro_cli() {
+  local -a commands=(
+    'chat:Start or resume a conversation'
+    'agent:Manage custom agents (list, create, edit, validate)'
+    'translate:Convert natural language to shell commands'
+    'mcp:Manage MCP servers'
+    'login:Authenticate with Kiro'
+    'logout:Remove stored credentials'
+    'doctor:Diagnose configuration issues'
+    'settings:Configure CLI preferences'
+  )
+
+  local -a options=(
+    '--agent[Use specific agent configuration]:agent:'
+    '(-h --help)'{-h,--help}'[Show help]'
+    '--help-all[Print help for all subcommands]'
+    '(-v --verbose)'{-v,--verbose}'[Increase logging verbosity]'
+    '(-V --version)'{-V,--version}'[Show version]'
+  )
+
+  local -a chat_options=(
+    '--no-interactive[Print first response to stdout without interactive mode]'
+    '(-r --resume)'{-r,--resume}'[Restore previous conversation]'
+    '--resume-picker[Interactive session selection]'
+    '--list-sessions[List saved sessions]'
+    '--delete-session[Remove session by ID]:id:'
+    '--trust-all-tools[Enable all tools without confirmation]'
+    '--trust-tools[Allow specific tools]:tools:'
+    '--wrap[Line wrapping]:mode:(always never auto)'
+    '--agent[Use specific agent]:agent:'
+  )
+
+  local curcontext="$curcontext" state line
+  _arguments -C \
+    '1:command:->cmd' \
+    '*::arg:->rest' && return 0
+
+  case "$state" in
+    cmd)
+      _describe 'command' commands
+      _arguments -s -S $options
+      ;;
+    rest)
+      case "${line[1]}" in
+        chat) _arguments -s -S $chat_options $options '::input:' ;;
+        agent) _arguments '1:subcommand:(list create edit validate set-default)' '*::arg:' ;;
+        *) _arguments -s -S $options ;;
+      esac
+      ;;
+  esac
+}
+compdef _kiro_cli kiro-cli
+
+# ---------------------------------------------------------------------------
 # opencode (uses built-in yargs completions)
 # ---------------------------------------------------------------------------
 _opencode_yargs_completions() {
@@ -447,7 +662,7 @@ _meldr() {
   local -a create_options=(
     '(-r --repo)'{-r,--repo}'[Repository URL to add]:url:'
     '(-b --branch)'{-b,--branch}'[Branch to create worktree on]:branch:'
-    '(-a --agent)'{-a,--agent}'[AI agent to use]:agent:(claude cursor none)'
+    '(-a --agent)'{-a,--agent}'[AI agent to use]:agent:(claude cursor gemini codex opencode pi kiro none)'
   )
 
   local -a sync_options=(

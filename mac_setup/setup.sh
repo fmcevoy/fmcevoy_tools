@@ -351,9 +351,50 @@ fi
 echo ""
 
 # =============================================================================
-# Step 13: Secrets template
+# Step 13: Coding agents (npm global)
 # =============================================================================
-info "Step 13: Secrets template..."
+info "Step 13: Coding agents..."
+
+if command -v npm &>/dev/null; then
+  # Claude Code is installed via Homebrew cask (Brewfile), upgraded via npm in cli-upgrades
+  # Cursor auto-updates via the app
+  # OpenCode is installed via Homebrew (Brewfile)
+
+  # Gemini CLI
+  if ! npm list -g @google/gemini-cli &>/dev/null; then
+    info "Installing Gemini CLI..."
+    run npm install -g @google/gemini-cli
+    ok "Gemini CLI installed"
+  else
+    ok "Gemini CLI already installed"
+  fi
+
+  # OpenAI Codex
+  if ! npm list -g @openai/codex &>/dev/null; then
+    info "Installing OpenAI Codex..."
+    run npm install -g @openai/codex
+    ok "Codex installed"
+  else
+    ok "Codex already installed"
+  fi
+
+  # Pi coding agent
+  if ! npm list -g @mariozechner/pi-coding-agent &>/dev/null; then
+    info "Installing Pi coding agent..."
+    run npm install -g @mariozechner/pi-coding-agent
+    ok "Pi installed"
+  else
+    ok "Pi already installed"
+  fi
+else
+  warn "npm not found — coding agents require node"
+fi
+echo ""
+
+# =============================================================================
+# Step 14: Secrets template
+# =============================================================================
+info "Step 14: Secrets template..."
 
 SECRETS_FILE="$HOME/ee"
 if [[ ! -f "$SECRETS_FILE" ]]; then
@@ -375,9 +416,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 14: macOS defaults
+# Step 15: macOS defaults
 # =============================================================================
-info "Step 14: macOS defaults..."
+info "Step 15: macOS defaults..."
 
 if [[ -f "$SCRIPT_DIR/macos_defaults.sh" ]]; then
   run bash "$SCRIPT_DIR/macos_defaults.sh"
@@ -388,9 +429,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 15: Neovim plugins (headless)
+# Step 16: Neovim plugins (headless)
 # =============================================================================
-info "Step 15: Neovim plugins..."
+info "Step 16: Neovim plugins..."
 
 if command -v nvim &>/dev/null; then
   info "Installing Neovim plugins headlessly..."
@@ -402,9 +443,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 16: TPM plugins
+# Step 17: TPM plugins
 # =============================================================================
-info "Step 16: TPM plugins..."
+info "Step 17: TPM plugins..."
 
 TPM_INSTALL="$HOME/.tmux/plugins/tpm/bin/install_plugins"
 if [[ -x "$TPM_INSTALL" ]]; then
@@ -417,9 +458,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 17: Claude Code MCP servers
+# Step 18: Claude Code MCP servers
 # =============================================================================
-info "Step 17: Claude Code MCP servers..."
+info "Step 18: Claude Code MCP servers..."
 
 CLAUDE_DIR="$HOME/.claude"
 CLAUDE_MCP="$CLAUDE_DIR/.mcp.json"
@@ -480,9 +521,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 18: Create gitconfig.local if missing
+# Step 19: Create gitconfig.local if missing
 # =============================================================================
-info "Step 18: Git identity..."
+info "Step 19: Git identity..."
 
 if [[ ! -f "$HOME/.gitconfig.local" ]]; then
   info "Creating ~/.gitconfig.local template..."

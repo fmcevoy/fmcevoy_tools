@@ -4,7 +4,7 @@
 # =============================================================================
 # Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
 # Sections: brew, npm, pip, poetry, go, mise, pyenv, omz, zsh-plugins,
-#           tpm, nvim, claude, codex, mcporter, meldr, flyctl, vercel, supabase
+#           tpm, nvim, claude, gemini, codex, pi, kiro, mcporter, meldr, flyctl, vercel, supabase, codexbar
 set -uo pipefail
 
 DRY_RUN=false
@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
     --skip)     SKIP="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
-      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude codex mcporter meldr flyctl vercel supabase"
+      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini codex pi kiro mcporter meldr flyctl vercel supabase codexbar"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -121,6 +121,9 @@ capture_all_versions() {
   command -v cursor &>/dev/null  && versions_ref[cursor]="$(safe_version 'cursor --version')"
   # claude --version hangs (TUI), use npm instead
   command -v npm &>/dev/null     && versions_ref[claude]="$(safe_version "npm list -g @anthropic-ai/claude-code 2>/dev/null | grep claude-code | sed 's/.*@//'")"
+  command -v gemini &>/dev/null  && versions_ref[gemini]="$(safe_version 'gemini --version')"
+  command -v pi &>/dev/null      && versions_ref[pi]="$(safe_version 'pi --version')"
+  command -v kiro-cli &>/dev/null && versions_ref[kiro]="$(safe_version 'kiro-cli --version')"
 }
 capture_all_versions BEFORE_VERSIONS
 ok "Versions captured"
@@ -162,6 +165,21 @@ elif should_run "claude"; then
 fi
 
 # ---------------------------------------------------------------------------
+# Gemini CLI (npm)
+# ---------------------------------------------------------------------------
+if should_run "gemini" && command -v npm &>/dev/null; then
+  section "Gemini CLI"
+  if npm list -g @google/gemini-cli &>/dev/null; then
+    try_upgrade "gemini-cli" run npm install -g @google/gemini-cli@latest
+    ok "Gemini CLI done"
+  else
+    skip "gemini-cli not installed globally"
+  fi
+elif should_run "gemini"; then
+  skip "npm not found (needed for gemini-cli)"
+fi
+
+# ---------------------------------------------------------------------------
 # OpenAI Codex (npm)
 # ---------------------------------------------------------------------------
 if should_run "codex" && command -v npm &>/dev/null; then
@@ -174,6 +192,21 @@ if should_run "codex" && command -v npm &>/dev/null; then
   fi
 elif should_run "codex"; then
   skip "npm not found"
+fi
+
+# ---------------------------------------------------------------------------
+# Pi coding agent (npm)
+# ---------------------------------------------------------------------------
+if should_run "pi" && command -v npm &>/dev/null; then
+  section "Pi coding agent"
+  if npm list -g @mariozechner/pi-coding-agent &>/dev/null; then
+    try_upgrade "pi" run npm install -g @mariozechner/pi-coding-agent@latest
+    ok "Pi done"
+  else
+    skip "pi not installed globally"
+  fi
+elif should_run "pi"; then
+  skip "npm not found (needed for pi)"
 fi
 
 # ---------------------------------------------------------------------------
@@ -234,6 +267,16 @@ if should_run "go" && command -v go &>/dev/null; then
   dim "Go is managed by Homebrew (upgraded above)"
   dim "$(go version)"
   ok "Go done"
+fi
+
+# ---------------------------------------------------------------------------
+# Kiro CLI (brew cask — upgraded in Homebrew section above)
+# ---------------------------------------------------------------------------
+if should_run "kiro" && command -v kiro-cli &>/dev/null; then
+  section "Kiro CLI"
+  dim "Kiro CLI is managed by Homebrew cask (upgraded above)"
+  dim "$(kiro-cli --version | head -1)"
+  ok "Kiro CLI done"
 fi
 
 # ---------------------------------------------------------------------------
@@ -374,6 +417,15 @@ if should_run "vercel" && command -v npm &>/dev/null; then
   fi
 elif should_run "vercel"; then
   skip "npm not found (needed for vercel)"
+fi
+
+# ---------------------------------------------------------------------------
+# CodexBar (brew cask — upgraded in Homebrew section above)
+# ---------------------------------------------------------------------------
+if should_run "codexbar"; then
+  section "CodexBar"
+  dim "CodexBar is managed by Homebrew cask (upgraded above)"
+  ok "CodexBar done"
 fi
 
 # ---------------------------------------------------------------------------

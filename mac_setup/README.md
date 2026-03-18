@@ -30,12 +30,15 @@ cd ~/fmcevoy_tools/mac_setup
 8. **mise** — polyglot runtime manager
 9. **Poetry** — Python dependency manager (v1.x via uv)
 10. **meldr** — multi-repo workspace manager (via `cargo install`)
-11. **Secrets template** — `~/ee` (chmod 600, sourced by zshrc)
-12. **macOS defaults** — keyboard repeat, Finder, Dock, trackpad
-13. **Neovim plugins** — headless `:PlugInstall`
-14. **tmux plugins** — TPM install
-15. **Claude Code MCP** — configures MCP servers, injects GitHub token from `gh` CLI
-16. **Git identity** — creates `~/.gitconfig.local` template
+11. **Fly CLI** — Fly.io deployment CLI
+12. **Vercel CLI** — Vercel deployment CLI (npm global)
+13. **Coding agents** — Gemini CLI, OpenAI Codex, Pi (npm global; Claude + Kiro via cask, OpenCode via brew, Cursor auto-updates)
+14. **Secrets template** — `~/ee` (chmod 600, sourced by zshrc)
+15. **macOS defaults** — keyboard repeat, Finder, Dock, trackpad
+16. **Neovim plugins** — headless `:PlugInstall`
+17. **tmux plugins** — TPM install
+18. **Claude Code MCP** — configures MCP servers, injects GitHub token from `gh` CLI
+19. **Git identity** — creates `~/.gitconfig.local` template
 
 ## Config Files
 
@@ -66,7 +69,7 @@ Tab completions come from three layers:
 |--------|----------|
 | **carapace** (brew) | 800+ CLIs: git, docker, kubectl, terraform, aws, helm, etc. |
 | **oh-my-zsh plugins** | git, fzf, docker, kubectl, golang, terraform |
-| **completions.zsh** (custom) | claude, cursor, opencode, meldr, difft, duf, grpcurl, sshuttle, tre, yamllint, virtualenv |
+| **completions.zsh** (custom) | claude, cursor, gemini, codex, pi, kiro-cli, opencode, meldr, difft, duf, grpcurl, sshuttle, tre, yamllint, virtualenv |
 
 Add machine-specific completions in `~/.completions.local.zsh`.
 
