@@ -4,7 +4,7 @@
 # =============================================================================
 # Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
 # Sections: brew, npm, pip, poetry, go, mise, pyenv, omz, zsh-plugins,
-#           tpm, nvim, claude, gemini, codex, pi, kiro, mcporter, meldr, flyctl, vercel, supabase, codexbar
+#           tpm, nvim, claude, gemini, codex, pi, kiro, cursor, mcporter, meldr, flyctl, vercel, supabase, codexbar
 set -uo pipefail
 
 DRY_RUN=false
@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
     --skip)     SKIP="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
-      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini codex pi kiro mcporter meldr flyctl vercel supabase codexbar"
+      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini codex pi kiro cursor mcporter meldr flyctl vercel supabase codexbar"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -119,8 +119,7 @@ capture_all_versions() {
   command -v vercel &>/dev/null   && versions_ref[vercel]="$(safe_version 'vercel --version')"
   command -v supabase &>/dev/null && versions_ref[supabase]="$(safe_version 'supabase --version')"
   command -v cursor &>/dev/null  && versions_ref[cursor]="$(safe_version 'cursor --version')"
-  # claude --version hangs (TUI), use npm instead
-  command -v npm &>/dev/null     && versions_ref[claude]="$(safe_version "npm list -g @anthropic-ai/claude-code 2>/dev/null | grep claude-code | sed 's/.*@//'")"
+  command -v claude &>/dev/null  && versions_ref[claude]="$(safe_version 'claude --version')"
   command -v gemini &>/dev/null  && versions_ref[gemini]="$(safe_version 'gemini --version')"
   command -v pi &>/dev/null      && versions_ref[pi]="$(safe_version 'pi --version')"
   command -v kiro-cli &>/dev/null && versions_ref[kiro]="$(safe_version 'kiro-cli --version')"
@@ -154,14 +153,12 @@ elif should_run "npm"; then
 fi
 
 # ---------------------------------------------------------------------------
-# Claude Code (npm)
+# Claude Code (native installer)
 # ---------------------------------------------------------------------------
-if should_run "claude" && command -v npm &>/dev/null; then
+if should_run "claude"; then
   section "Claude Code"
-  try_upgrade "claude-code" run npm install -g @anthropic-ai/claude-code@latest
+  try_upgrade "claude-code" run claude update
   ok "Claude Code done"
-elif should_run "claude"; then
-  skip "npm not found (needed for claude-code)"
 fi
 
 # ---------------------------------------------------------------------------
