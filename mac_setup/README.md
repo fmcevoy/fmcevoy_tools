@@ -32,13 +32,14 @@ cd ~/fmcevoy_tools/mac_setup
 10. **meldr** — multi-repo workspace manager (via `cargo install`)
 11. **Fly CLI** — Fly.io deployment CLI
 12. **Vercel CLI** — Vercel deployment CLI (npm global)
-13. **Coding agents** — Gemini CLI, OpenAI Codex, Pi (npm global; Claude + Kiro via cask, OpenCode via brew, Cursor auto-updates)
-14. **Secrets template** — `~/ee` (chmod 600, sourced by zshrc)
-15. **macOS defaults** — keyboard repeat, Finder, Dock, trackpad
-16. **Neovim plugins** — headless `:PlugInstall`
-17. **tmux plugins** — TPM install
-18. **Claude Code MCP** — configures MCP servers, injects GitHub token from `gh` CLI
-19. **Git identity** — creates `~/.gitconfig.local` template
+13. **Bun** — JavaScript runtime and toolkit (official installer)
+14. **Coding agents** — Gemini CLI, OpenAI Codex, Pi (npm global; Claude + Kiro via cask, OpenCode via brew, Cursor auto-updates)
+15. **Secrets template** — `~/ee` (chmod 600, sourced by zshrc)
+16. **macOS defaults** — keyboard repeat, Finder, Dock, trackpad
+17. **Neovim plugins** — headless `:PlugInstall`
+18. **tmux plugins** — TPM install
+19. **Claude Code MCP** — configures MCP servers, injects GitHub token from `gh` CLI
+20. **Git identity** — creates `~/.gitconfig.local` template
 
 ## Config Files
 

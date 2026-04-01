@@ -102,6 +102,7 @@ Plug 'yetone/avante.nvim', { 'branch': 'main', 'do': 'make' }
 Plug 'MunifTanjim/nui.nvim'
 Plug 'stevearc/dressing.nvim'
 Plug 'coder/claudecode.nvim'
+Plug 'folke/snacks.nvim'
 
 " Utilities
 Plug 'akinsho/toggleterm.nvim'
@@ -267,6 +268,10 @@ local ok, claudecode = pcall(require, 'claudecode')
 if ok then
   claudecode.setup({
     auto_start = true,
+    track_selection = true,
+    terminal = {
+      provider = "none",
+    },
   })
 end
 EOF
@@ -304,6 +309,13 @@ nmap <Leader>ms <Plug>MarkdownPreviewStop
 " ---------------------------------------------------------------------------
 " Key bindings
 " ---------------------------------------------------------------------------
+" Claude Code
+nnoremap <Leader>ac <cmd>ClaudeCode<cr>
+nnoremap <Leader>af <cmd>ClaudeCodeFocus<cr>
+nnoremap <Leader>ar <cmd>ClaudeCode --resume<cr>
+nnoremap <Leader>ab <cmd>ClaudeCodeAdd %<cr>
+vnoremap <Leader>as <cmd>ClaudeCodeSend<cr>
+
 " Telescope
 nnoremap <Leader>p  <cmd>Telescope find_files<cr>
 nnoremap <Leader>fg <cmd>Telescope live_grep<cr>

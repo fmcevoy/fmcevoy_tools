@@ -92,6 +92,7 @@ link_file "$SCRIPT_DIR/configs/ghostty/config"      "$HOME/.config/ghostty/confi
 link_file "$SCRIPT_DIR/configs/starship.toml"       "$HOME/.config/starship.toml"
 link_file "$SCRIPT_DIR/configs/meldr_prompt.sh"    "$HOME/.config/meldr_prompt.sh"
 link_file "$SCRIPT_DIR/configs/completions.zsh"    "$HOME/.completions.zsh"
+link_file "$SCRIPT_DIR/configs/claude/settings.json" "$HOME/.claude/settings.json"
 link_file "$SCRIPT_DIR/cli-upgrades"                "$HOME/cli-upgrades"
 
 # SSH config (ensure directory permissions)
@@ -351,9 +352,27 @@ fi
 echo ""
 
 # =============================================================================
-# Step 13: Coding agents (npm global)
+# Step 13: Bun
 # =============================================================================
-info "Step 13: Coding agents..."
+info "Step 13: Bun..."
+
+if command -v bun &>/dev/null; then
+  ok "Bun already installed ($(bun --version 2>/dev/null || echo 'unknown'))"
+else
+  info "Installing Bun..."
+  if $DRY_RUN; then
+    skip "[dry-run] curl -fsSL https://bun.sh/install | bash"
+  else
+    curl -fsSL https://bun.sh/install | bash
+  fi
+  ok "Bun installed"
+fi
+echo ""
+
+# =============================================================================
+# Step 14: Coding agents (npm global)
+# =============================================================================
+info "Step 14: Coding agents..."
 
 if command -v npm &>/dev/null; then
   # Claude Code is installed via Homebrew cask (Brewfile), upgraded via npm in cli-upgrades
@@ -392,9 +411,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 14: Secrets template
+# Step 15: Secrets template
 # =============================================================================
-info "Step 14: Secrets template..."
+info "Step 15: Secrets template..."
 
 SECRETS_FILE="$HOME/ee"
 if [[ ! -f "$SECRETS_FILE" ]]; then
@@ -416,9 +435,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 15: macOS defaults
+# Step 16: macOS defaults
 # =============================================================================
-info "Step 15: macOS defaults..."
+info "Step 16: macOS defaults..."
 
 if [[ -f "$SCRIPT_DIR/macos_defaults.sh" ]]; then
   run bash "$SCRIPT_DIR/macos_defaults.sh"
@@ -429,9 +448,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 16: Neovim plugins (headless)
+# Step 17: Neovim plugins (headless)
 # =============================================================================
-info "Step 16: Neovim plugins..."
+info "Step 17: Neovim plugins..."
 
 if command -v nvim &>/dev/null; then
   info "Installing Neovim plugins headlessly..."
@@ -443,9 +462,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 17: TPM plugins
+# Step 18: TPM plugins
 # =============================================================================
-info "Step 17: TPM plugins..."
+info "Step 18: TPM plugins..."
 
 TPM_INSTALL="$HOME/.tmux/plugins/tpm/bin/install_plugins"
 if [[ -x "$TPM_INSTALL" ]]; then
@@ -458,9 +477,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 18: Claude Code MCP servers
+# Step 19: Claude Code MCP servers
 # =============================================================================
-info "Step 18: Claude Code MCP servers..."
+info "Step 19: Claude Code MCP servers..."
 
 CLAUDE_DIR="$HOME/.claude"
 CLAUDE_MCP="$CLAUDE_DIR/.mcp.json"
@@ -521,9 +540,9 @@ fi
 echo ""
 
 # =============================================================================
-# Step 19: Create gitconfig.local if missing
+# Step 20: Create gitconfig.local if missing
 # =============================================================================
-info "Step 19: Git identity..."
+info "Step 20: Git identity..."
 
 if [[ ! -f "$HOME/.gitconfig.local" ]]; then
   info "Creating ~/.gitconfig.local template..."

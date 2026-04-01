@@ -92,6 +92,7 @@ alias ack='ag'
 alias md='glow -p'
 alias medlr='meldr'
 alias m='meldr'
+alias claude='command claude --channels plugin:telegram@claude-plugins-official --remote-control'
 
 # ---------------------------------------------------------------------------
 # Handy aliases
@@ -238,3 +239,25 @@ export MELDR_AGENT="${MELDR_AGENT:-claude}"
 # Secrets (never committed)
 # ---------------------------------------------------------------------------
 [[ -f "$HOME/ee" ]] && source "$HOME/ee"
+
+# Added by Antigravity
+export PATH="/Users/fintanmcevoy/.antigravity/antigravity/bin:$PATH"
+
+# bun completions
+[ -s "/Users/fintanmcevoy/.bun/_bun" ] && source "/Users/fintanmcevoy/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

@@ -4,7 +4,7 @@
 # =============================================================================
 # Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
 # Sections: brew, npm, pip, poetry, go, mise, pyenv, omz, zsh-plugins,
-#           tpm, nvim, claude, gemini, codex, pi, kiro, cursor, mcporter, meldr, flyctl, vercel, supabase, codexbar
+#           tpm, nvim, claude, gemini, codex, pi, kiro, cursor, mcporter, meldr, flyctl, vercel, bun, supabase, codexbar
 set -uo pipefail
 
 DRY_RUN=false
@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
     --skip)     SKIP="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
-      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini codex pi kiro cursor mcporter meldr flyctl vercel supabase codexbar"
+      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini codex pi kiro cursor mcporter meldr flyctl vercel bun supabase codexbar"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -117,6 +117,7 @@ capture_all_versions() {
   command -v meldr &>/dev/null    && versions_ref[meldr]="$(safe_version 'meldr --version')"
   command -v flyctl &>/dev/null   && versions_ref[flyctl]="$(safe_version 'flyctl version')"
   command -v vercel &>/dev/null   && versions_ref[vercel]="$(safe_version 'vercel --version')"
+  command -v bun &>/dev/null      && versions_ref[bun]="$(safe_version 'bun --version')"
   command -v supabase &>/dev/null && versions_ref[supabase]="$(safe_version 'supabase --version')"
   command -v cursor &>/dev/null  && versions_ref[cursor]="$(safe_version 'cursor --version')"
   command -v claude &>/dev/null  && versions_ref[claude]="$(safe_version 'claude --version')"
@@ -414,6 +415,17 @@ if should_run "vercel" && command -v npm &>/dev/null; then
   fi
 elif should_run "vercel"; then
   skip "npm not found (needed for vercel)"
+fi
+
+# ---------------------------------------------------------------------------
+# Bun (self-upgrade)
+# ---------------------------------------------------------------------------
+if should_run "bun" && command -v bun &>/dev/null; then
+  section "Bun"
+  try_upgrade "bun" run bun upgrade
+  ok "Bun done"
+elif should_run "bun"; then
+  skip "bun not found"
 fi
 
 # ---------------------------------------------------------------------------
