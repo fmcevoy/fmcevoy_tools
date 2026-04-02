@@ -154,7 +154,7 @@ elif should_run "npm"; then
 fi
 
 # ---------------------------------------------------------------------------
-# Claude Code (native installer)
+# Claude Code (npm global, upgraded via `claude update`)
 # ---------------------------------------------------------------------------
 if should_run "claude"; then
   section "Claude Code"
@@ -167,12 +167,8 @@ fi
 # ---------------------------------------------------------------------------
 if should_run "gemini" && command -v npm &>/dev/null; then
   section "Gemini CLI"
-  if npm list -g @google/gemini-cli &>/dev/null; then
-    try_upgrade "gemini-cli" run npm install -g @google/gemini-cli@latest
-    ok "Gemini CLI done"
-  else
-    skip "gemini-cli not installed globally"
-  fi
+  try_upgrade "gemini-cli" run npm install -g @google/gemini-cli@latest
+  ok "Gemini CLI done"
 elif should_run "gemini"; then
   skip "npm not found (needed for gemini-cli)"
 fi

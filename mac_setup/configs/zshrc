@@ -229,6 +229,10 @@ add-zsh-hook preexec _expand_alias_preexec
 # ---------------------------------------------------------------------------
 export MELDR_AGENT="${MELDR_AGENT:-claude}"
 
+# Claude Code
+export CLAUDE_CODE_NO_FLICKER=1
+export CLAUDE_CODE_USE_REMOTE=1
+
 # ---------------------------------------------------------------------------
 # Local overrides (never committed)
 # ---------------------------------------------------------------------------
@@ -245,6 +249,14 @@ export PATH="/Users/fintanmcevoy/.antigravity/antigravity/bin:$PATH"
 
 # bun completions
 [ -s "/Users/fintanmcevoy/.bun/_bun" ] && source "/Users/fintanmcevoy/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"

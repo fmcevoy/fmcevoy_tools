@@ -109,7 +109,6 @@ brew "redis"
 # Casks
 # ---------------------------------------------------------------------------
 cask "1password-cli"
-cask "claude-code"
 cask "kiro-cli"
 cask "steipete/tap/codexbar"
 cask "drawio"

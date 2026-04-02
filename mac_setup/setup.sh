@@ -375,12 +375,20 @@ echo ""
 info "Step 14: Coding agents..."
 
 if command -v npm &>/dev/null; then
-  # Claude Code is installed via Homebrew cask (Brewfile), upgraded via npm in cli-upgrades
+  # Claude Code (npm global, upgraded via `claude update`)
+  if ! command -v claude &>/dev/null; then
+    info "Installing Claude Code..."
+    run npm install -g @anthropic-ai/claude-code
+    ok "Claude Code installed"
+  else
+    ok "Claude Code already installed"
+  fi
+
   # Cursor auto-updates via the app
   # OpenCode is installed via Homebrew (Brewfile)
 
   # Gemini CLI
-  if ! npm list -g @google/gemini-cli &>/dev/null; then
+  if ! command -v gemini &>/dev/null; then
     info "Installing Gemini CLI..."
     run npm install -g @google/gemini-cli
     ok "Gemini CLI installed"

@@ -22,4 +22,4 @@ When adding/modifying aliases, shell functions, CLI tools, or upgrade sections, 
 - Shell completions go in `mac_setup/configs/completions.zsh`
 - Local overrides use `.<name>.local` pattern, never committed
 - Poetry pinned to v1.x (not brew's v2)
-- Claude Code uses native installer, not npm
+- Claude Code installed via npm (`@anthropic-ai/claude-code`), upgraded via `claude update`
