@@ -49,6 +49,11 @@ command -v mise &>/dev/null && eval "$(mise activate zsh)"
 # pyenv
 if [[ -d "$HOME/.pyenv" ]]; then
   export PYENV_ROOT="$HOME/.pyenv"
+  # Clean stale rehash lock (left behind by interrupted shells/Terminus exits)
+  local _shim_lock="$PYENV_ROOT/shims/.pyenv-shim"
+  if [[ -f "$_shim_lock" ]]; then
+    find "$_shim_lock" -mmin +1 -delete 2>/dev/null
+  fi
   eval "$(pyenv init -)"
   eval "$(pyenv virtualenv-init -)"
 fi
