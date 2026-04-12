@@ -413,6 +413,15 @@ if command -v npm &>/dev/null; then
   else
     ok "Pi already installed"
   fi
+
+  # DeepSeek TUI
+  if ! npm list -g deepseek-tui &>/dev/null; then
+    info "Installing DeepSeek TUI..."
+    run npm install -g deepseek-tui
+    ok "DeepSeek TUI installed"
+  else
+    ok "DeepSeek TUI already installed"
+  fi
 else
   warn "npm not found — coding agents require node"
 fi

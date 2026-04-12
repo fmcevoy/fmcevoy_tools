@@ -207,6 +207,7 @@ gch() { gemini -p -y "$*"; }
 xch() { codex exec --dangerously-bypass-approvals-and-sandbox "$*"; }
 pch() { pi -p "$*"; }
 kch() { kiro-cli chat --no-interactive --trust-all-tools "$*"; }
+dch() { deepseek-tui -p "$*" --yolo; }
 
 # ---------------------------------------------------------------------------
 # Help

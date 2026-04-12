@@ -419,6 +419,16 @@ _kiro_cli() {
 compdef _kiro_cli kiro-cli
 
 # ---------------------------------------------------------------------------
+# deepseek-tui (uses built-in zsh completion generator)
+# ---------------------------------------------------------------------------
+# The binary ships `deepseek-tui completions zsh` which registers #compdef deepseek.
+# We eval it once and bind the resulting function to both `deepseek` and `deepseek-tui`.
+if command -v deepseek-tui &>/dev/null; then
+  eval "$(deepseek-tui completions zsh 2>/dev/null)"
+  (( $+functions[_deepseek] )) && compdef _deepseek deepseek-tui
+fi
+
+# ---------------------------------------------------------------------------
 # opencode (uses built-in yargs completions)
 # ---------------------------------------------------------------------------
 _opencode_yargs_completions() {
@@ -662,7 +672,7 @@ _meldr() {
   local -a create_options=(
     '(-r --repo)'{-r,--repo}'[Repository URL to add]:url:'
     '(-b --branch)'{-b,--branch}'[Branch to create worktree on]:branch:'
-    '(-a --agent)'{-a,--agent}'[AI agent to use]:agent:(claude cursor gemini codex opencode pi kiro none)'
+    '(-a --agent)'{-a,--agent}'[AI agent to use]:agent:(claude cursor gemini codex opencode pi kiro deepseek none)'
   )
 
   local -a sync_options=(
