@@ -6,11 +6,16 @@
 # Usage: ~/start_tmux_dev (aliased as 't' in zshrc)
 
 SESSION="Dev"
+LOG_FILE="$HOME/.cache/meldr-tmux-launcher.log"
 
 # Attach if session already exists
 if tmux has-session -t "$SESSION" 2>/dev/null; then
   exec tmux attach-session -t "$SESSION"
 fi
+
+# Ensure the launcher log directory exists and start a fresh log for this run
+mkdir -p "$(dirname "$LOG_FILE")"
+: > "$LOG_FILE"
 
 # Get terminal dimensions for percentage-based splits
 COLS="$(tput cols)"
@@ -45,13 +50,23 @@ if command -v meldr &>/dev/null; then
   for ws_dir in ~/workspaces/ws-*/; do
     [[ -f "$ws_dir/meldr.toml" ]] || continue
 
-    # Get list of worktree branches
-    branches=("${(@f)$(cd "$ws_dir" && meldr worktree list 2>/dev/null | sed 's/ *(tmux:.*//' | tr -d ' ')}")
+    # Reconstruct .meldr/state.json from on-disk git worktrees before listing.
+    # Makes the launcher self-healing on machines that were bootstrapped
+    # manually or where state.json was never synced across.
+    echo "=== $ws_dir: scan ===" >>"$LOG_FILE"
+    (cd "$ws_dir" && meldr worktree scan >>"$LOG_FILE" 2>&1) || true
+
+    # Get list of worktree branches. Drop the "No active worktrees." sentinel
+    # so an empty workspace doesn't feed a bogus branch to `worktree open`.
+    branches=("${(@f)$(cd "$ws_dir" && meldr worktree list 2>>"$LOG_FILE" \
+      | grep -v '^No active worktrees\.$' \
+      | sed 's/ *(tmux:.*//' \
+      | tr -d ' ')}")
 
     for branch in "${branches[@]}"; do
       [[ -z "$branch" ]] && continue
       # Open tmux tabs for this worktree (meldr handles the layout)
-      (cd "$ws_dir" && meldr worktree open "$branch" 2>/dev/null) &
+      (cd "$ws_dir" && meldr worktree open "$branch" >>"$LOG_FILE" 2>&1) &
     done
   done
   wait
