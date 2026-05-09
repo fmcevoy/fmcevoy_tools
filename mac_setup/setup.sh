@@ -370,9 +370,22 @@ fi
 echo ""
 
 # =============================================================================
-# Step 14: Coding agents (npm global)
+# Step 14: Coding agents
 # =============================================================================
 info "Step 14: Coding agents..."
+
+# Devin CLI (curl installer, upgraded via `devin update`)
+if ! command -v devin &>/dev/null; then
+  info "Installing Devin CLI..."
+  if $DRY_RUN; then
+    skip "[dry-run] curl -fsSL https://cli.devin.ai/install.sh | bash"
+  else
+    curl -fsSL https://cli.devin.ai/install.sh | bash
+  fi
+  ok "Devin CLI installed"
+else
+  ok "Devin CLI already installed"
+fi
 
 if command -v npm &>/dev/null; then
   # Claude Code (npm global, upgraded via `claude update`)

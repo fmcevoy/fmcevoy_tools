@@ -4,7 +4,7 @@
 # =============================================================================
 # Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
 # Sections: brew, npm, pip, poetry, go, mise, pyenv, omz, zsh-plugins,
-#           tpm, nvim, claude, gemini, codex, pi, kiro, deepseek, cursor, mcporter, meldr, flyctl, vercel, bun, supabase, codexbar
+#           tpm, nvim, claude, gemini, codex, pi, kiro, deepseek, cursor, mcporter, meldr, flyctl, vercel, bun, supabase, codexbar, devin
 set -uo pipefail
 
 DRY_RUN=false
@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
     --skip)     SKIP="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
-      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini codex pi kiro deepseek cursor mcporter meldr flyctl vercel bun supabase codexbar"
+      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini codex pi kiro deepseek cursor mcporter meldr flyctl vercel bun supabase codexbar devin"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -125,6 +125,7 @@ capture_all_versions() {
   command -v pi &>/dev/null      && versions_ref[pi]="$(safe_version 'pi --version')"
   command -v kiro-cli &>/dev/null && versions_ref[kiro]="$(safe_version 'kiro-cli --version')"
   command -v deepseek-tui &>/dev/null && versions_ref[deepseek]="$(safe_version 'deepseek-tui --version')"
+  command -v devin &>/dev/null   && versions_ref[devin]="$(safe_version 'devin --version')"
 }
 capture_all_versions BEFORE_VERSIONS
 ok "Versions captured"
@@ -161,6 +162,17 @@ if should_run "claude"; then
   section "Claude Code"
   try_upgrade "claude-code" run claude update
   ok "Claude Code done"
+fi
+
+# ---------------------------------------------------------------------------
+# Devin CLI (curl installer, upgraded via `devin update`)
+# ---------------------------------------------------------------------------
+if should_run "devin" && command -v devin &>/dev/null; then
+  section "Devin CLI"
+  try_upgrade "devin" run devin update
+  ok "Devin CLI done"
+elif should_run "devin"; then
+  skip "devin not found"
 fi
 
 # ---------------------------------------------------------------------------
