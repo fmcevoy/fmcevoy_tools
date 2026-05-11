@@ -97,7 +97,7 @@ alias ack='ag'
 alias md='glow -p'
 alias medlr='meldr'
 alias m='meldr'
-alias claude='command claude --channels plugin:telegram@claude-plugins-official --remote-control'
+alias claude='command claude'
 
 # ---------------------------------------------------------------------------
 # Handy aliases
