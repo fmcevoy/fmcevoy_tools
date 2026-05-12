@@ -62,6 +62,17 @@ All configs are symlinked from `configs/` to `$HOME`. If a file already exists a
 
 Local override files are created empty by `setup.sh` and are never committed. They load after the managed config, so values set in `.local` files win.
 
+**Per-laptop overrides via `~/fmcevoy`.** If a private repo exists at `~/fmcevoy`, `setup.sh` will symlink matching files from `~/fmcevoy/local/` in place of creating empty stubs. Flat naming convention:
+
+| `$HOME` target | `~/fmcevoy/local/` source |
+|---|---|
+| `~/.zshrc.local` | `zshrc.local` |
+| `~/.completions.local.zsh` | `completions.local.zsh` |
+| `~/.tmux.conf.local` | `tmux.conf.local` |
+| `~/.config/nvim/init.local.vim` | `init.local.vim` |
+| `~/.config/ghostty/config.local` | `ghostty.config.local` |
+| `~/.ssh/config.local` | `ssh.config.local` |
+
 ## Shell Completions
 
 Tab completions come from three layers:

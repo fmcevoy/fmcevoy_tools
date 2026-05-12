@@ -92,8 +92,9 @@ link_file "$SCRIPT_DIR/configs/ghostty/config"      "$HOME/.config/ghostty/confi
 link_file "$SCRIPT_DIR/configs/starship.toml"       "$HOME/.config/starship.toml"
 link_file "$SCRIPT_DIR/configs/meldr_prompt.sh"    "$HOME/.config/meldr_prompt.sh"
 link_file "$SCRIPT_DIR/configs/completions.zsh"    "$HOME/.completions.zsh"
-link_file "$SCRIPT_DIR/configs/claude/settings.json" "$HOME/.claude/settings.json"
-link_file "$SCRIPT_DIR/cli-upgrades"                "$HOME/cli-upgrades"
+link_file "$SCRIPT_DIR/configs/claude/settings.json"          "$HOME/.claude/settings.json"
+link_file "$SCRIPT_DIR/configs/claude/statusline-command.sh"  "$HOME/.claude/statusline-command.sh"
+link_file "$SCRIPT_DIR/cli-upgrades"                          "$HOME/cli-upgrades"
 
 # SSH config (ensure directory permissions)
 run mkdir -p "$HOME/.ssh"
@@ -108,22 +109,27 @@ run chmod +x "$SCRIPT_DIR/configs/tmux/start_tmux_dev"
 run chmod +x "$SCRIPT_DIR/configs/tmux/help"
 run chmod +x "$SCRIPT_DIR/cli-upgrades"
 
-# Create empty .local override files (so includes don't fail)
-local_files=(
-  "$HOME/.zshrc.local"
-  "$HOME/.completions.local.zsh"
-  "$HOME/.tmux.conf.local"
-  "$HOME/.config/nvim/init.local.vim"
-  "$HOME/.config/ghostty/config.local"
-  "$HOME/.ssh/config.local"
-)
-for lf in "${local_files[@]}"; do
-  if [[ ! -f "$lf" ]]; then
-    run mkdir -p "$(dirname "$lf")"
-    run touch "$lf"
-    ok "Created $lf"
+# Create local override files
+# If ~/fmcevoy/local/<name> exists (private laptop repo), symlink it; otherwise create an empty stub.
+ensure_local_override() {
+  local target="$1"
+  local fmcevoy_name="$2"
+  local fmcevoy_src="$HOME/fmcevoy/local/$fmcevoy_name"
+  if [[ -f "$fmcevoy_src" ]]; then
+    link_file "$fmcevoy_src" "$target"
+  elif [[ ! -e "$target" ]]; then
+    run mkdir -p "$(dirname "$target")"
+    run touch "$target"
+    ok "Created $target"
   fi
-done
+}
+
+ensure_local_override "$HOME/.zshrc.local"                  "zshrc.local"
+ensure_local_override "$HOME/.completions.local.zsh"        "completions.local.zsh"
+ensure_local_override "$HOME/.tmux.conf.local"              "tmux.conf.local"
+ensure_local_override "$HOME/.config/nvim/init.local.vim"   "init.local.vim"
+ensure_local_override "$HOME/.config/ghostty/config.local"  "ghostty.config.local"
+ensure_local_override "$HOME/.ssh/config.local"             "ssh.config.local"
 
 echo ""
 

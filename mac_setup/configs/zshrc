@@ -279,3 +279,30 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# Kiro CLI post block. Keep at the bottom of this file.
+[[ -f "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.post.zsh"
+
+
+# ============================================================
+# Kiro CLI tmux neutralization (MUST be after Kiro's post blocks above)
+# ============================================================
+# Kiro CLI (ex-Fig/Amazon Q) installs fig_precmd/fig_preexec hooks that wrap
+# PS1 and emit OSC 697 sequences. Inside tmux, these conflict with starship
+# during rapid SIGWINCH events (pane splits), causing cursor corruption and
+# '%' partial-line markers.
+#
+# Kiro rewrites ~/.zprofile AND adds the block above on upgrade, so we cannot
+# modify those blocks (edits get duplicated on next upgrade). Instead we
+# neutralize the hooks here, AFTER Kiro has fully loaded. If a future Kiro
+# upgrade re-appends its block below this one, re-run:
+#   ~/fmcevoy_tools/mac_setup/scripts/fix_kiro_tmux.sh
+if [[ -n "$TMUX" ]]; then
+  precmd_functions=("${(@)precmd_functions:#fig_precmd}")
+  preexec_functions=("${(@)preexec_functions:#fig_preexec}")
+  fig_reset_hooks() { : ; }
+  fig_precmd()      { : ; }
+  fig_preexec()     { : ; }
+  # Suppress '%' partial-line marker that appears after pane-resize partial output
+  PROMPT_EOL_MARK=""
+fi
