@@ -72,6 +72,10 @@ if command -v meldr &>/dev/null; then
   wait
 fi
 
+# Start recon after all worktree tabs are created so it doesn't race with
+# meldr window creation. Loop restarts after each session switch.
+tmux send-keys -t "${SESSION}:apps.0" "while true; do recon view; done" Enter
+
 # Select first window and attach
 tmux select-window -t "${SESSION}:0"
 exec tmux attach-session -t "$SESSION"

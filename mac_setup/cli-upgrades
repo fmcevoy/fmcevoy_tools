@@ -4,7 +4,7 @@
 # =============================================================================
 # Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
 # Sections: brew, npm, pip, poetry, go, mise, pyenv, omz, zsh-plugins,
-#           tpm, nvim, claude, gemini, codex, pi, kiro, deepseek, cursor, mcporter, meldr, flyctl, vercel, bun, supabase, codexbar, devin
+#           tpm, nvim, claude, gemini, codex, pi, kiro, deepseek, cursor, mcporter, meldr, recon, flyctl, vercel, bun, supabase, codexbar, devin
 set -uo pipefail
 
 DRY_RUN=false
@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
     --skip)     SKIP="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
-      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini codex pi kiro deepseek cursor mcporter meldr flyctl vercel bun supabase codexbar devin"
+      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini codex pi kiro deepseek cursor mcporter meldr recon flyctl vercel bun supabase codexbar devin"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -413,6 +413,17 @@ if should_run "meldr" && command -v cargo &>/dev/null; then
   ok "meldr done"
 elif should_run "meldr"; then
   skip "cargo not found (needed for meldr)"
+fi
+
+# ---------------------------------------------------------------------------
+# recon (cargo — Claude Code multi-agent TUI dashboard)
+# ---------------------------------------------------------------------------
+if should_run "recon" && command -v cargo &>/dev/null; then
+  section "recon"
+  try_upgrade "recon" run cargo install --git https://github.com/gavraz/recon
+  ok "recon done"
+elif should_run "recon"; then
+  skip "cargo not found (needed for recon)"
 fi
 
 # ---------------------------------------------------------------------------

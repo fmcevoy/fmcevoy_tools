@@ -33,6 +33,12 @@ echo -e "  ${GRN}tx${RST}             ${DIM}Kill all tmux sessions${RST}"
 echo -e "  ${GRN}tl${RST}             ${DIM}List tmux sessions${RST}"
 
 echo ""
+echo -e "${BLD}${YEL}  Claude Code${RST}"
+echo -e "  ${GRN}agents${RST}         ${DIM}Multi-agent TUI dashboard (recon)${RST}"
+echo -e "  ${GRN}Tab bell${RST}       ${DIM}Red flash + ! when a session finishes or waits${RST}"
+echo -e "  ${DIM}Sounds: Glass.aiff (done) · Funk.aiff (waiting on you)${RST}"
+
+echo ""
 echo -e "${BLD}${YEL}  Meldr (multi-repo workspaces)${RST}"
 echo -e "  ${GRN}meldr create <name> -r <url> -b <branch>${RST}"
 echo -e "  ${DIM}                   Init workspace + worktrees${RST}"

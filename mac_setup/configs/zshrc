@@ -98,6 +98,7 @@ alias md='glow -p'
 alias medlr='meldr'
 alias m='meldr'
 alias claude='command claude'
+alias agents='recon'
 
 # ---------------------------------------------------------------------------
 # Handy aliases
@@ -306,3 +307,7 @@ if [[ -n "$TMUX" ]]; then
   # Suppress '%' partial-line marker that appears after pane-resize partial output
   PROMPT_EOL_MARK=""
 fi
+
+# >>> grok installer >>>
+export PATH="$HOME/.grok/bin:$PATH"
+# <<< grok installer <<<

@@ -94,6 +94,7 @@ link_file "$SCRIPT_DIR/configs/meldr_prompt.sh"    "$HOME/.config/meldr_prompt.s
 link_file "$SCRIPT_DIR/configs/completions.zsh"    "$HOME/.completions.zsh"
 link_file "$SCRIPT_DIR/configs/claude/settings.json"          "$HOME/.claude/settings.json"
 link_file "$SCRIPT_DIR/configs/claude/statusline-command.sh"  "$HOME/.claude/statusline-command.sh"
+link_file "$SCRIPT_DIR/configs/claude/claude-notify.sh"       "$HOME/.claude/claude-notify.sh"
 link_file "$SCRIPT_DIR/cli-upgrades"                          "$HOME/cli-upgrades"
 
 # SSH config (ensure directory permissions)
@@ -108,6 +109,7 @@ fi
 run chmod +x "$SCRIPT_DIR/configs/tmux/start_tmux_dev"
 run chmod +x "$SCRIPT_DIR/configs/tmux/help"
 run chmod +x "$SCRIPT_DIR/cli-upgrades"
+run chmod +x "$SCRIPT_DIR/configs/claude/claude-notify.sh"
 
 # Create local override files
 # If ~/fmcevoy/local/<name> exists (private laptop repo), symlink it; otherwise create an empty stub.

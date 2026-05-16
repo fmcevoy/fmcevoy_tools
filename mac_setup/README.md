@@ -59,6 +59,7 @@ All configs are symlinked from `configs/` to `$HOME`. If a file already exists a
 | `configs/tmux/start_tmux_dev` | `~/start_tmux_dev` | — | |
 | `configs/tmux/help` | `~/tmux_help` | — | |
 | `configs/claude/mcp.json` | `~/.claude/.mcp.json` | — | Copied, not symlinked (secrets injected) |
+| `configs/claude/claude-notify.sh` | `~/.claude/claude-notify.sh` | — | Hook script for Stop/Notification events |
 
 Local override files are created empty by `setup.sh` and are never committed. They load after the managed config, so values set in `.local` files win.
 
@@ -92,6 +93,27 @@ Set in zshrc, override in `~/.zshrc.local` or `~/ee`:
 | Variable | Default | Used by |
 |----------|---------|---------|
 | `MELDR_AGENT` | `claude` | meldr workspace agent |
+
+## Claude Session Notifications
+
+| Signal | Event | Mechanism |
+|--------|-------|-----------|
+| `Glass.aiff` chime | Claude finishes a task (`Stop`) | Claude Code hook → `afplay` |
+| `Funk.aiff` ping | Claude is waiting on you (`Notification`) | Claude Code hook → `afplay` |
+| Tab flashes red/yellow | `Stop` (red) or `Notification` (yellow), focused or inactive tab | Hook sets `@cc_status` on the tmux window; `window-status-format` conditionals in `tmux.conf` paint it. Clears on tab focus or after 60 s. |
+
+Hook script: `mac_setup/configs/claude/claude-notify.sh` → symlinked to `~/.claude/claude-notify.sh`.
+Wired in `configs/claude/settings.json` under `hooks.Stop` and `hooks.Notification`.
+
+State files written per-session to `~/.cache/claude-agents/<session_id>.json` — readable by dashboard tools.
+
+### Agent dashboard
+
+`agents` (alias for `recon`) opens a persistent TUI dashboard showing all Claude sessions, their worktree/branch, model, context %, and last-active time. Run it in a dedicated tmux pane.
+
+Install: `cargo install --git https://github.com/gavraz/recon` or `cliup --only recon`.
+
+If `recon` doesn't fit (wrong columns, no meldr-worktree awareness), the fallback plan is a `meldr agents` Rust subcommand using the same `~/.cache/claude-agents/` state files.
 
 ## After Setup
 
