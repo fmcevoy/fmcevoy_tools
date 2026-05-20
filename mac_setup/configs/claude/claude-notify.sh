@@ -13,6 +13,13 @@ mkdir -p "$STATE_DIR"
 
 # Read hook JSON from stdin
 HOOK_DATA=$(cat)
+
+# Skip subagent invocations — only the main agent should flash/beep.
+# Per docs, agent_id is present *only* when the hook fires inside a subagent.
+if printf '%s' "$HOOK_DATA" | jq -e 'has("agent_id")' >/dev/null 2>&1; then
+  exit 0
+fi
+
 SESSION_ID=$(printf '%s' "$HOOK_DATA" | jq -r '.session_id // ""' 2>/dev/null)
 CWD=$(printf '%s' "$HOOK_DATA" | jq -r '.cwd // ""' 2>/dev/null)
 
