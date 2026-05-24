@@ -76,6 +76,18 @@ fi
 # meldr window creation. Loop restarts after each session switch.
 tmux send-keys -t "${SESSION}:apps.0" "while true; do recon view; done" Enter
 
+# Run sch in pane 1 if the alias/command exists
+tmux send-keys -t "${SESSION}:apps.1" 'type sch &>/dev/null && sch' Enter
+
+# Pane 2: cd to ~/fmcevoy if it exists, else ~/fmcevoy_tools, then open claude agents
+tmux send-keys -t "${SESSION}:apps.2" '[[ -d ~/fmcevoy ]] && cd ~/fmcevoy || cd ~/fmcevoy_tools; claude agents' Enter
+
+# Pane 3: go home
+tmux send-keys -t "${SESSION}:apps.3" 'cd ~' Enter
+
+# Start yazi in pane 4 of the apps window
+tmux send-keys -t "${SESSION}:apps.4" "yazi ~/workspaces" Enter
+
 # Select first window and attach
 tmux select-window -t "${SESSION}:0"
 exec tmux attach-session -t "$SESSION"

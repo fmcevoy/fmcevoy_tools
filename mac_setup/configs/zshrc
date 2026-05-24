@@ -213,7 +213,7 @@ wtc() {
 alias ch='cursor agent -p --force --output-format stream-json --stream-partial-output'
 cch() { claude -p --dangerously-skip-permissions "$*"; }
 gch() { gemini -p -y "$*"; }
-agch() { agy -p "$*"; }
+agch() { agy chat "$*"; }
 xch() { codex exec --dangerously-bypass-approvals-and-sandbox "$*"; }
 pch() { pi -p "$*"; }
 kch() { kiro-cli chat --no-interactive --trust-all-tools "$*"; }
@@ -266,9 +266,6 @@ export CLAUDE_CODE_USE_REMOTE=1
 # ---------------------------------------------------------------------------
 [[ -f "$HOME/ee" ]] && source "$HOME/ee"
 
-# Added by Antigravity
-export PATH="/Users/fintanmcevoy/.antigravity/antigravity/bin:$PATH"
-
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
@@ -304,3 +301,4 @@ fi
 # >>> grok installer >>>
 export PATH="$HOME/.grok/bin:$PATH"
 # <<< grok installer <<<
+

@@ -318,6 +318,10 @@ if command -v cargo &>/dev/null; then
   info "Installing/updating meldr via cargo..."
   run cargo install --git https://github.com/fmcevoy/meldr.git --force
   ok "meldr installed ($(meldr --version 2>/dev/null || echo 'unknown'))"
+
+  info "Installing/updating recon via cargo..."
+  run cargo install --git https://github.com/gavraz/recon
+  ok "recon installed"
 else
   warn "cargo not found — install rust first, then re-run setup"
 fi
@@ -381,6 +385,19 @@ echo ""
 # Step 14: Coding agents
 # =============================================================================
 info "Step 14: Coding agents..."
+
+# Antigravity CLI (self-installer, upgraded via `agy update`)
+if ! command -v agy &>/dev/null; then
+  info "Installing Antigravity CLI..."
+  if $DRY_RUN; then
+    skip "[dry-run] curl -fsSL https://get.antigravity.ai/install.sh | bash"
+  else
+    curl -fsSL https://get.antigravity.ai/install.sh | bash
+  fi
+  ok "Antigravity CLI installed"
+else
+  ok "Antigravity CLI already installed"
+fi
 
 # Devin CLI (curl installer, upgraded via `devin update`)
 if ! command -v devin &>/dev/null; then

@@ -4,7 +4,7 @@
 macOS dev environment bootstrap & management. Not a library — a collection of configs, scripts, and setup automation.
 
 ## Structure
-- `mac_setup/setup.sh` — 19-step idempotent bootstrap
+- `mac_setup/setup.sh` — 20-step idempotent bootstrap
 - `mac_setup/cli-upgrades` — unified tool upgrade manager (symlinked to `~/cli-upgrades`)
 - `mac_setup/configs/` — dotfiles symlinked to `$HOME`
 - `mac_setup/README.md` — setup documentation
@@ -18,7 +18,7 @@ When adding/modifying aliases, shell functions, CLI tools, or upgrade sections, 
 4. `mac_setup/README.md` — setup steps and tables
 
 ## Conventions
-- Headless agent aliases follow `<letter>ch` pattern (cch, gch, xch, pch, kch)
+- Headless agent aliases follow `<letter>ch` pattern (cch, gch, agch, xch, pch, kch, dch)
 - Shell completions go in `mac_setup/configs/completions.zsh`
 - Local overrides use `.<name>.local` pattern, never committed
 - Poetry pinned to v1.x (not brew's v2)

@@ -3,8 +3,8 @@
 # cli-upgrades - Upgrade all CLI tools and package managers
 # =============================================================================
 # Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
-# Sections: brew, npm, pip, poetry, go, mise, pyenv, omz, zsh-plugins,
-#           tpm, nvim, claude, gemini, antigravity, codex, pi, kiro, deepseek, cursor, mcporter, meldr, recon, flyctl, vercel, bun, supabase, codexbar, devin
+# Sections: brew, npm, pip, pipx, poetry, go, mise, pyenv, omz, zsh-plugins,
+#           tpm, nvim, claude, gemini, antigravity, codex, pi, kiro, deepseek, cursor, mcporter, meldr, recon, flyctl, vercel, bun, supabase, codexbar, devin, kargo
 set -uo pipefail
 
 DRY_RUN=false
@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
     --skip)     SKIP="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
-      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini antigravity codex pi kiro deepseek cursor mcporter meldr recon flyctl vercel bun supabase codexbar devin"
+      echo "Sections: brew npm pip pipx poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini antigravity codex pi kiro deepseek cursor mcporter meldr recon flyctl vercel bun supabase codexbar devin kargo"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -107,6 +107,7 @@ capture_all_versions() {
   command -v node &>/dev/null    && versions_ref[node]="$(safe_version 'node --version')"
   command -v npm &>/dev/null     && versions_ref[npm]="$(safe_version 'npm --version')"
   command -v pip3 &>/dev/null    && versions_ref[pip]="$(safe_version 'pip3 --version')"
+  command -v pipx &>/dev/null    && versions_ref[pipx]="$(safe_version 'pipx --version')"
   command -v poetry &>/dev/null  && versions_ref[poetry]="$(safe_version 'poetry --version')"
   command -v go &>/dev/null      && versions_ref[go]="$(safe_version 'go version')"
   command -v mise &>/dev/null    && versions_ref[mise]="$(safe_version 'mise --version')"
@@ -127,6 +128,7 @@ capture_all_versions() {
   command -v kiro-cli &>/dev/null && versions_ref[kiro]="$(safe_version 'kiro-cli --version')"
   command -v deepseek-tui &>/dev/null && versions_ref[deepseek]="$(safe_version 'deepseek-tui --version')"
   command -v devin &>/dev/null   && versions_ref[devin]="$(safe_version 'devin --version')"
+  command -v kargo &>/dev/null   && versions_ref[kargo]="$(safe_version 'kargo version')"
 }
 capture_all_versions BEFORE_VERSIONS
 ok "Versions captured"
@@ -251,6 +253,17 @@ if should_run "pip" && command -v pip3 &>/dev/null; then
   dim "pip is managed by Homebrew (upgraded above)"
   dim "$(pip3 --version)"
   ok "pip done"
+fi
+
+# ---------------------------------------------------------------------------
+# pipx (Python app installer — managed by Homebrew, upgraded above)
+# ---------------------------------------------------------------------------
+if should_run "pipx" && command -v pipx &>/dev/null; then
+  section "pipx"
+  try_upgrade "pipx upgrade-all" run pipx upgrade-all
+  ok "pipx done"
+elif should_run "pipx"; then
+  skip "pipx not found"
 fi
 
 # ---------------------------------------------------------------------------
@@ -494,6 +507,18 @@ if should_run "supabase" && command -v supabase &>/dev/null; then
   ok "Supabase CLI done"
 elif should_run "supabase"; then
   skip "supabase not found"
+fi
+
+# ---------------------------------------------------------------------------
+# Kargo (brew — upgraded in Homebrew section above)
+# ---------------------------------------------------------------------------
+if should_run "kargo" && command -v kargo &>/dev/null; then
+  section "Kargo"
+  dim "Kargo is managed by Homebrew (upgraded above)"
+  dim "$(kargo version 2>/dev/null | head -1)"
+  ok "Kargo done"
+elif should_run "kargo"; then
+  skip "kargo not found"
 fi
 
 # ---------------------------------------------------------------------------

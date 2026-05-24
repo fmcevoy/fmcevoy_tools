@@ -29,11 +29,11 @@ cd ~/fmcevoy_tools/mac_setup
 7. **pyenv** — Python version manager
 8. **mise** — polyglot runtime manager
 9. **Poetry** — Python dependency manager (v1.x via uv)
-10. **meldr** — multi-repo workspace manager (via `cargo install`)
+10. **meldr + recon** — multi-repo workspace manager and Claude agent dashboard (via `cargo install`)
 11. **Fly CLI** — Fly.io deployment CLI
 12. **Vercel CLI** — Vercel deployment CLI (npm global)
 13. **Bun** — JavaScript runtime and toolkit (official installer)
-14. **Coding agents** — Claude Code, Gemini CLI, Codex, Pi, DeepSeek TUI (npm global); OpenCode (brew); Kiro (cask); Cursor (auto-updates); Devin (curl installer)
+14. **Coding agents** — Claude Code, Gemini CLI, Codex, Pi, DeepSeek TUI (npm global); OpenCode (brew); Kiro (cask); Cursor (auto-updates); Antigravity, Devin (curl installers)
 15. **Secrets template** — `~/ee` (chmod 600, sourced by zshrc)
 16. **macOS defaults** — keyboard repeat, Finder, Dock, trackpad
 17. **Neovim plugins** — headless `:PlugInstall`
@@ -58,8 +58,11 @@ All configs are symlinked from `configs/` to `$HOME`. If a file already exists a
 | `configs/gitignore_global` | `~/.gitignore` | — | |
 | `configs/tmux/start_tmux_dev` | `~/start_tmux_dev` | — | |
 | `configs/tmux/help` | `~/tmux_help` | — | |
+| `configs/claude/settings.json` | `~/.claude/settings.json` | — | Claude Code settings and hooks |
+| `configs/claude/statusline-command.sh` | `~/.claude/statusline-command.sh` | — | Claude Code statusline script |
 | `configs/claude/mcp.json` | `~/.claude/.mcp.json` | — | Copied, not symlinked (secrets injected) |
 | `configs/claude/claude-notify.sh` | `~/.claude/claude-notify.sh` | — | Hook script for Stop/Notification events |
+| `configs/meldr_prompt.sh` | `~/.config/meldr_prompt.sh` | — | meldr starship prompt integration |
 
 Local override files are created empty by `setup.sh` and are never committed. They load after the managed config, so values set in `.local` files win.
 
@@ -111,9 +114,7 @@ State files written per-session to `~/.cache/claude-agents/<session_id>.json` �
 
 `agents` (alias for `recon`) opens a persistent TUI dashboard showing all Claude sessions, their worktree/branch, model, context %, and last-active time. Run it in a dedicated tmux pane.
 
-Install: `cargo install --git https://github.com/gavraz/recon` or `cliup --only recon`.
-
-If `recon` doesn't fit (wrong columns, no meldr-worktree awareness), the fallback plan is a `meldr agents` Rust subcommand using the same `~/.cache/claude-agents/` state files.
+Installed automatically by `setup.sh` (step 10). To upgrade: `cliup --only recon`.
 
 ## After Setup
 
