@@ -46,6 +46,9 @@ plugins=(
 # mise (runtime version manager)
 command -v mise &>/dev/null && eval "$(mise activate zsh)"
 
+# direnv (per-directory env vars — enables MELDR_AGENT per-project via .envrc)
+command -v direnv &>/dev/null && eval "$(direnv hook zsh)"
+
 # pyenv
 if [[ -d "$HOME/.pyenv" ]]; then
   export PYENV_ROOT="$HOME/.pyenv"
@@ -80,6 +83,9 @@ if command -v carapace &>/dev/null; then
   source "$_carapace_cache"
 fi
 
+# atuin (shell history with fuzzy search — replaces ^R)
+command -v atuin &>/dev/null && eval "$(atuin init zsh)"
+
 # starship prompt (MUST be last — installs precmd hook)
 command -v starship &>/dev/null && eval "$(starship init zsh)"
 
@@ -95,6 +101,8 @@ alias du='duf'
 alias dig='doggo'
 alias ack='ag'
 alias md='glow -p'
+alias http='xh'
+alias y='yazi'
 alias medlr='meldr'
 alias m='meldr'
 alias claude='command claude'
@@ -205,10 +213,17 @@ wtc() {
 alias ch='cursor agent -p --force --output-format stream-json --stream-partial-output'
 cch() { claude -p --dangerously-skip-permissions "$*"; }
 gch() { gemini -p -y "$*"; }
+agch() { agy -p "$*"; }
 xch() { codex exec --dangerously-bypass-approvals-and-sandbox "$*"; }
 pch() { pi -p "$*"; }
 kch() { kiro-cli chat --no-interactive --trust-all-tools "$*"; }
 dch() { deepseek-tui -p "$*" --yolo; }
+
+# Broadcast a prompt to claude + gemini in parallel tmux panes
+mcast() {
+  tmux split-window -h "gch $*"
+  cch "$@"
+}
 
 # ---------------------------------------------------------------------------
 # Help
@@ -254,32 +269,10 @@ export CLAUDE_CODE_USE_REMOTE=1
 # Added by Antigravity
 export PATH="/Users/fintanmcevoy/.antigravity/antigravity/bin:$PATH"
 
-# bun completions
-[ -s "/Users/fintanmcevoy/.bun/_bun" ] && source "/Users/fintanmcevoy/.bun/_bun"
-
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+[ -s "$BUN_INSTALL/_bun" ] && source "$BUN_INSTALL/_bun"
 
 # Kiro CLI post block. Keep at the bottom of this file.
 [[ -f "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.post.zsh"

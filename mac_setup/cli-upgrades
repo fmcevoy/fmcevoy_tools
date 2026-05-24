@@ -4,7 +4,7 @@
 # =============================================================================
 # Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
 # Sections: brew, npm, pip, poetry, go, mise, pyenv, omz, zsh-plugins,
-#           tpm, nvim, claude, gemini, codex, pi, kiro, deepseek, cursor, mcporter, meldr, recon, flyctl, vercel, bun, supabase, codexbar, devin
+#           tpm, nvim, claude, gemini, antigravity, codex, pi, kiro, deepseek, cursor, mcporter, meldr, recon, flyctl, vercel, bun, supabase, codexbar, devin
 set -uo pipefail
 
 DRY_RUN=false
@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
     --skip)     SKIP="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
-      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini codex pi kiro deepseek cursor mcporter meldr recon flyctl vercel bun supabase codexbar devin"
+      echo "Sections: brew npm pip poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini antigravity codex pi kiro deepseek cursor mcporter meldr recon flyctl vercel bun supabase codexbar devin"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -122,6 +122,7 @@ capture_all_versions() {
   command -v cursor &>/dev/null  && versions_ref[cursor]="$(safe_version 'cursor --version')"
   command -v claude &>/dev/null  && versions_ref[claude]="$(safe_version 'claude --version')"
   command -v gemini &>/dev/null  && versions_ref[gemini]="$(safe_version 'gemini --version')"
+  command -v agy &>/dev/null     && versions_ref[antigravity]="$(safe_version 'agy --version')"
   command -v pi &>/dev/null      && versions_ref[pi]="$(safe_version 'pi --version')"
   command -v kiro-cli &>/dev/null && versions_ref[kiro]="$(safe_version 'kiro-cli --version')"
   command -v deepseek-tui &>/dev/null && versions_ref[deepseek]="$(safe_version 'deepseek-tui --version')"
@@ -184,6 +185,17 @@ if should_run "gemini" && command -v npm &>/dev/null; then
   ok "Gemini CLI done"
 elif should_run "gemini"; then
   skip "npm not found (needed for gemini-cli)"
+fi
+
+# ---------------------------------------------------------------------------
+# Antigravity CLI (self-update)
+# ---------------------------------------------------------------------------
+if should_run "antigravity" && command -v agy &>/dev/null; then
+  section "Antigravity CLI"
+  try_upgrade "antigravity" run agy update
+  ok "Antigravity CLI done"
+elif should_run "antigravity"; then
+  skip "agy not found"
 fi
 
 # ---------------------------------------------------------------------------
