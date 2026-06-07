@@ -477,17 +477,17 @@ else
   warn "npm not found — coding agents require node"
 fi
 
-# Kimi Code CLI (MoonshotAI — pipx-managed)
-if command -v pipx &>/dev/null; then
-  if ! pipx list --short 2>/dev/null | grep -q '^kimi-cli '; then
+# Kimi Code CLI (MoonshotAI — uv tool managed)
+if command -v uv &>/dev/null; then
+  if ! uv tool list 2>/dev/null | grep -q '^kimi-cli '; then
     info "Installing Kimi Code CLI..."
-    run pipx install kimi-cli
+    run uv tool install kimi-cli
     ok "Kimi Code CLI installed"
   else
     ok "Kimi Code CLI already installed"
   fi
 else
-  warn "pipx not found — skipping Kimi Code CLI (install via: pipx install kimi-cli)"
+  warn "uv not found — skipping Kimi Code CLI (install via: uv tool install kimi-cli)"
 fi
 echo ""
 

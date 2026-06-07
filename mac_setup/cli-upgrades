@@ -340,12 +340,11 @@ elif should_run "grok"; then
 fi
 
 # ---------------------------------------------------------------------------
-# Kimi Code CLI (MoonshotAI — managed by pipx, upgraded above via pipx upgrade-all)
+# Kimi Code CLI (MoonshotAI — managed by uv tool, upgraded via uv tool upgrade)
 # ---------------------------------------------------------------------------
 if should_run "kimi" && command -v kimi &>/dev/null; then
   section "Kimi Code CLI"
-  dim "Kimi Code CLI is managed by pipx (upgraded above via pipx upgrade-all)"
-  dim "$(kimi --version 2>/dev/null | head -1)"
+  try_upgrade "kimi-cli" run uv tool upgrade kimi-cli
   ok "Kimi Code CLI done"
 elif should_run "kimi"; then
   skip "kimi not found"
