@@ -105,7 +105,12 @@ alias http='xh'
 alias y='yazi'
 alias medlr='meldr'
 alias m='meldr'
-alias claude='command claude'
+claude() {
+  local pane="${TMUX_PANE:-}"
+  local win=""
+  [ -n "$pane" ] && win=$(tmux display-message -p '#{window_id}' 2>/dev/null || true)
+  MELDR_TMUX_PANE="$pane" MELDR_TMUX_WINDOW_ID="$win" command claude "$@"
+}
 alias agents='recon'
 
 # ---------------------------------------------------------------------------
