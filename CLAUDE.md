@@ -59,7 +59,7 @@ Use the `/add-coding-agent` skill (`.claude/skills/add-coding-agent/SKILL.md`). 
 | `mac_setup/configs/tmux/help` | Add alias to reference card |
 | `mac_setup/README.md` | Update step 14 agent list |
 
-Headless aliases follow `<letter>ch` pattern: `cch` (claude), `gch` (gemini), `agch` (antigravity), `xch` (codex), `pch` (pi), `kch` (kiro), `dch` (deepseek).
+Headless aliases follow `<letter>ch` pattern: `cch` (claude), `gch` (gemini), `agch` (antigravity), `xch` (codex), `pch` (pi), `kch` (kiro), `dch` (deepseek), `grch` (grok), `mch` (kimi), `och` (opencode).
 
 ## Conventions
 

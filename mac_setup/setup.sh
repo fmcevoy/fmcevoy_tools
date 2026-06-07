@@ -412,6 +412,19 @@ else
   ok "Devin CLI already installed"
 fi
 
+# Grok Build CLI (xAI — self-installer, upgraded via re-running installer)
+if ! command -v grok &>/dev/null; then
+  info "Installing Grok Build CLI..."
+  if $DRY_RUN; then
+    skip "[dry-run] curl -fsSL https://x.ai/cli/install.sh | bash"
+  else
+    curl -fsSL https://x.ai/cli/install.sh | bash
+  fi
+  ok "Grok Build CLI installed"
+else
+  ok "Grok Build CLI already installed"
+fi
+
 if command -v npm &>/dev/null; then
   # Claude Code (npm global, upgraded via `claude update`)
   if ! command -v claude &>/dev/null; then
@@ -462,6 +475,19 @@ if command -v npm &>/dev/null; then
   fi
 else
   warn "npm not found — coding agents require node"
+fi
+
+# Kimi Code CLI (MoonshotAI — pipx-managed)
+if command -v pipx &>/dev/null; then
+  if ! pipx list --short 2>/dev/null | grep -q '^kimi-cli '; then
+    info "Installing Kimi Code CLI..."
+    run pipx install kimi-cli
+    ok "Kimi Code CLI installed"
+  else
+    ok "Kimi Code CLI already installed"
+  fi
+else
+  warn "pipx not found — skipping Kimi Code CLI (install via: pipx install kimi-cli)"
 fi
 echo ""
 

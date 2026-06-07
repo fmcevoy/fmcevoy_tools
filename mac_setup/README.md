@@ -34,7 +34,7 @@ cd ~/fmcevoy_tools/mac_setup
 11. **Fly CLI** — Fly.io deployment CLI
 12. **Vercel CLI** — Vercel deployment CLI (npm global)
 13. **Bun** — JavaScript runtime and toolkit (official installer)
-14. **Coding agents** — Antigravity, Devin (curl); Claude Code, Gemini CLI, Codex, Pi, DeepSeek TUI (npm global); OpenCode, Kiro (Brewfile); Cursor (Brewfile cask, ships `cursor` CLI)
+14. **Coding agents** — Antigravity, Devin, Grok Build (curl); Claude Code, Gemini CLI, Codex, Pi, DeepSeek TUI (npm global); Kimi Code CLI (pipx); OpenCode, Kiro (Brewfile); Cursor (Brewfile cask, ships `cursor` CLI)
 15. **Secrets template** — `~/ee` (chmod 600, sourced by zshrc)
 16. **macOS defaults** — keyboard repeat, Finder, Dock, trackpad
 17. **Neovim plugins** — headless `:PlugInstall`
@@ -87,7 +87,7 @@ Tab completions come from three layers:
 |--------|----------|
 | **carapace** (brew) | 800+ CLIs: git, docker, kubectl, terraform, aws, helm, etc. |
 | **oh-my-zsh plugins** | git, fzf, docker, kubectl, golang, terraform |
-| **completions.zsh** (custom) | claude, cursor, gemini, codex, pi, kiro-cli, deepseek-tui, opencode, difft, duf, grpcurl, sshuttle, tre, yamllint, virtualenv, meldr |
+| **completions.zsh** (custom) | claude, cursor, gemini, codex, pi, kiro-cli, deepseek-tui, grok, kimi, opencode, difft, duf, grpcurl, sshuttle, tre, yamllint, virtualenv, meldr |
 
 Add machine-specific completions in `~/.completions.local.zsh`.
 

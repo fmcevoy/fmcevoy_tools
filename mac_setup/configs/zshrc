@@ -218,6 +218,9 @@ xch() { codex exec --dangerously-bypass-approvals-and-sandbox "$*"; }
 pch() { pi -p "$*"; }
 kch() { kiro-cli chat --no-interactive --trust-all-tools "$*"; }
 dch() { deepseek-tui -p "$*" --yolo; }
+grch() { grok -p --yolo "$*"; }
+mch()  { kimi -p --yolo "$*"; }
+och()  { opencode run --dangerously-skip-permissions "$*"; }
 
 # Broadcast a prompt to claude + gemini in parallel tmux panes
 mcast() {

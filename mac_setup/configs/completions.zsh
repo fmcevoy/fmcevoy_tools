@@ -429,6 +429,20 @@ if command -v deepseek-tui &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
+# grok (Grok Build CLI — xAI)
+# ---------------------------------------------------------------------------
+if command -v grok &>/dev/null; then
+  eval "$(grok completion zsh 2>/dev/null)"
+fi
+
+# ---------------------------------------------------------------------------
+# kimi (Kimi Code CLI — MoonshotAI)
+# ---------------------------------------------------------------------------
+if command -v kimi &>/dev/null; then
+  eval "$(kimi completion zsh 2>/dev/null)"
+fi
+
+# ---------------------------------------------------------------------------
 # opencode (uses built-in yargs completions)
 # ---------------------------------------------------------------------------
 _opencode_yargs_completions() {
@@ -672,7 +686,7 @@ _meldr() {
   local -a create_options=(
     '(-r --repo)'{-r,--repo}'[Repository URL to add]:url:'
     '(-b --branch)'{-b,--branch}'[Branch to create worktree on]:branch:'
-    '(-a --agent)'{-a,--agent}'[AI agent to use]:agent:(claude cursor gemini codex opencode pi kiro deepseek none)'
+    '(-a --agent)'{-a,--agent}'[AI agent to use]:agent:(claude cursor gemini codex opencode pi kiro deepseek grok kimi none)'
   )
 
   local -a sync_options=(

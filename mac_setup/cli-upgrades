@@ -4,7 +4,7 @@
 # =============================================================================
 # Usage: cli-upgrades [--dry-run] [--only <section>] [--skip <section>]
 # Sections: brew, npm, pip, pipx, poetry, go, mise, pyenv, omz, zsh-plugins,
-#           tpm, nvim, claude, gemini, antigravity, codex, pi, kiro, deepseek, cursor, mcporter, meldr, recon, flyctl, vercel, bun, supabase, codexbar, devin, kargo
+#           tpm, nvim, claude, gemini, antigravity, codex, pi, kiro, deepseek, grok, kimi, cursor, mcporter, meldr, recon, flyctl, vercel, bun, supabase, codexbar, devin, kargo
 set -uo pipefail
 
 DRY_RUN=false
@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
     --skip)     SKIP="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: $(basename "$0") [--dry-run] [--only <section>] [--skip <section>]"
-      echo "Sections: brew npm pip pipx poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini antigravity codex pi kiro deepseek cursor mcporter meldr recon flyctl vercel bun supabase codexbar devin kargo"
+      echo "Sections: brew npm pip pipx poetry go mise pyenv omz zsh-plugins tpm nvim claude gemini antigravity codex pi kiro deepseek grok kimi cursor mcporter meldr recon flyctl vercel bun supabase codexbar devin kargo"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -127,6 +127,8 @@ capture_all_versions() {
   command -v pi &>/dev/null      && versions_ref[pi]="$(safe_version 'pi --version')"
   command -v kiro-cli &>/dev/null && versions_ref[kiro]="$(safe_version 'kiro-cli --version')"
   command -v deepseek-tui &>/dev/null && versions_ref[deepseek]="$(safe_version 'deepseek-tui --version')"
+  command -v grok &>/dev/null    && versions_ref[grok]="$(safe_version 'grok --version')"
+  command -v kimi &>/dev/null    && versions_ref[kimi]="$(safe_version 'kimi --version')"
   command -v devin &>/dev/null   && versions_ref[devin]="$(safe_version 'devin --version')"
   command -v kargo &>/dev/null   && versions_ref[kargo]="$(safe_version 'kargo version')"
 }
@@ -324,6 +326,29 @@ if should_run "deepseek" && command -v npm &>/dev/null; then
   fi
 elif should_run "deepseek"; then
   skip "npm not found (needed for deepseek-tui)"
+fi
+
+# ---------------------------------------------------------------------------
+# Grok Build CLI (xAI — self-installer; re-run installer to upgrade)
+# ---------------------------------------------------------------------------
+if should_run "grok" && command -v grok &>/dev/null; then
+  section "Grok Build CLI"
+  try_upgrade "grok" run bash -c 'curl -fsSL https://x.ai/cli/install.sh | bash'
+  ok "Grok Build CLI done"
+elif should_run "grok"; then
+  skip "grok not found"
+fi
+
+# ---------------------------------------------------------------------------
+# Kimi Code CLI (MoonshotAI — managed by pipx, upgraded above via pipx upgrade-all)
+# ---------------------------------------------------------------------------
+if should_run "kimi" && command -v kimi &>/dev/null; then
+  section "Kimi Code CLI"
+  dim "Kimi Code CLI is managed by pipx (upgraded above via pipx upgrade-all)"
+  dim "$(kimi --version 2>/dev/null | head -1)"
+  ok "Kimi Code CLI done"
+elif should_run "kimi"; then
+  skip "kimi not found"
 fi
 
 # ---------------------------------------------------------------------------
