@@ -87,7 +87,7 @@ Tab completions come from three layers:
 |--------|----------|
 | **carapace** (brew) | 800+ CLIs: git, docker, kubectl, terraform, aws, helm, etc. |
 | **oh-my-zsh plugins** | git, fzf, docker, kubectl, golang, terraform |
-| **completions.zsh** (custom) | claude, cursor, gemini, codex, pi, kiro-cli, deepseek-tui, grok, kimi, opencode, difft, duf, grpcurl, sshuttle, tre, yamllint, virtualenv, meldr |
+| **completions.zsh** (custom) | claude, cursor, gemini, codex, pi, kiro-cli, deepseek-tui, opencode, difft, duf, grpcurl, sshuttle, tre, yamllint, virtualenv, meldr |
 
 Add machine-specific completions in `~/.completions.local.zsh`.
 
