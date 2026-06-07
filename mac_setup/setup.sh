@@ -477,9 +477,9 @@ else
   warn "npm not found — coding agents require node"
 fi
 
-# Kimi Code CLI (MoonshotAI — uv tool managed)
+# Kimi Code CLI (MoonshotAI — uv-tool-managed)
 if command -v uv &>/dev/null; then
-  if ! uv tool list 2>/dev/null | grep -q '^kimi-cli '; then
+  if ! command -v kimi &>/dev/null && ! uv tool list 2>/dev/null | grep -q 'kimi-cli'; then
     info "Installing Kimi Code CLI..."
     run uv tool install kimi-cli
     ok "Kimi Code CLI installed"

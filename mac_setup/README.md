@@ -34,7 +34,7 @@ cd ~/fmcevoy_tools/mac_setup
 11. **Fly CLI** — Fly.io deployment CLI
 12. **Vercel CLI** — Vercel deployment CLI (npm global)
 13. **Bun** — JavaScript runtime and toolkit (official installer)
-14. **Coding agents** — Antigravity, Devin, Grok Build (curl); Claude Code, Gemini CLI, Codex, Pi, DeepSeek TUI (npm global); Kimi Code CLI (pipx); OpenCode, Kiro (Brewfile); Cursor (Brewfile cask, ships `cursor` CLI)
+14. **Coding agents** — Antigravity, Devin, Grok Build (curl); Claude Code, Gemini CLI, Codex, Pi, DeepSeek TUI (npm global); Kimi Code CLI (uv tool); OpenCode, Kiro (Brewfile); Cursor (Brewfile cask, ships `cursor` CLI)
 15. **Secrets template** — `~/ee` (chmod 600, sourced by zshrc)
 16. **macOS defaults** — keyboard repeat, Finder, Dock, trackpad
 17. **Neovim plugins** — headless `:PlugInstall`

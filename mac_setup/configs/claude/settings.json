@@ -68,6 +68,10 @@
     }
   },
   "effortLevel": "xhigh",
+  "voice": {
+    "enabled": true,
+    "mode": "tap"
+  },
   "autoDreamEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark",

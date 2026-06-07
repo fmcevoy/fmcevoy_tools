@@ -14,23 +14,35 @@ mkdir -p "$STATE_DIR"
 # Read hook JSON from stdin
 HOOK_DATA=$(cat)
 
-# Skip subagent invocations — only the main agent should flash/beep.
-# Per docs, agent_id is present *only* when the hook fires inside a subagent.
-if printf '%s' "$HOOK_DATA" | jq -e 'has("agent_id")' >/dev/null 2>&1; then
+# Skip subagent events only — not every event that happens to carry agent_id.
+# A tighter check: skip only when agent_id is non-empty AND the event name
+# explicitly identifies a subagent (e.g. SubagentStop). Main-agent Stop/Notification
+# events that carry a stray agent_id field still flash.
+if printf '%s' "$HOOK_DATA" | jq -e '(.agent_id // "") != "" and ((.hook_event_name // "") | test("Subagent"))' >/dev/null 2>&1; then
   exit 0
 fi
 
 SESSION_ID=$(printf '%s' "$HOOK_DATA" | jq -r '.session_id // ""' 2>/dev/null)
 CWD=$(printf '%s' "$HOOK_DATA" | jq -r '.cwd // ""' 2>/dev/null)
 
-# Collect tmux context (inherited from the Claude process environment)
+# Collect tmux context. Prefer MELDR_TMUX_* vars injected at spawn time (M2 fix)
+# since TMUX/TMUX_PANE are often stripped by Node.js wrappers before the hook runs.
 PANE_ID=""
 WINDOW_ID=""
 WINDOW_NAME=""
-if [ -n "${TMUX:-}" ] && [ -n "${TMUX_PANE:-}" ]; then
+if [ -n "${MELDR_TMUX_PANE:-}" ]; then
+  PANE_ID="$MELDR_TMUX_PANE"
+  WINDOW_ID="$MELDR_TMUX_WINDOW_ID"
+  WINDOW_NAME=$(tmux display-message -t "$PANE_ID" -p '#{window_name}' 2>/dev/null || true)
+elif [ -n "${TMUX:-}" ] && [ -n "${TMUX_PANE:-}" ]; then
   PANE_ID=$(tmux display-message -t "$TMUX_PANE" -p '#{pane_id}' 2>/dev/null || true)
   WINDOW_ID=$(tmux display-message -t "$TMUX_PANE" -p '#{window_id}' 2>/dev/null || true)
   WINDOW_NAME=$(tmux display-message -t "$TMUX_PANE" -p '#{window_name}' 2>/dev/null || true)
+elif [ -n "${MELDR_AGENT_SESSION:-}" ]; then
+  SIDECAR="$HOME/.cache/claude-agents/${MELDR_AGENT_SESSION}.parent_pane"
+  PANE_ID=$(cat "$SIDECAR" 2>/dev/null || true)
+  [ -n "$PANE_ID" ] && WINDOW_ID=$(tmux display-message -t "$PANE_ID" -p '#{window_id}' 2>/dev/null || true)
+  [ -n "$PANE_ID" ] && WINDOW_NAME=$(tmux display-message -t "$PANE_ID" -p '#{window_name}' 2>/dev/null || true)
 fi
 
 # Write state file (readable by recon, meldr agents, etc.) — must come after STATUS is set
@@ -52,21 +64,28 @@ case "$EVENT" in
     ;;
 esac
 
-# Write state file now that STATUS is resolved
+# Write state file now that STATUS is resolved (atomic write via mktemp+mv)
 if [ -n "$SESSION_ID" ]; then
+  TMP=$(mktemp "$STATE_DIR/.${SESSION_ID}.XXXXXX")
   printf '{"status":"%s","ts":%s,"cwd":"%s","pane":"%s","window":"%s","window_name":"%s"}\n' \
     "$STATUS" "$(date +%s)" "$CWD" "$PANE_ID" "$WINDOW_ID" "$WINDOW_NAME" \
-    > "$STATE_DIR/${SESSION_ID}.json"
+    > "$TMP" && mv -f "$TMP" "$STATE_DIR/${SESSION_ID}.json" || rm -f "$TMP"
 fi
 
-# Set @cc_status on the tmux window — tmux.conf format conditionals render the flash.
-# Works on both focused and inactive tabs. Clears via pane-focus-in hook (tmux.conf)
-# or the 60s safety timer below, whichever comes first.
-if [ -n "${TMUX:-}" ] && [ -n "$WINDOW_ID" ]; then
+# Set @cc_status on the tmux window so the tab flashes.
+# Generation guard (GEN) prevents one pane's 120s clear-timer from wiping a
+# later flash from a different pane in the same window.
+if [ -n "$WINDOW_ID" ]; then
+  GEN="$(date +%s%N)-$$"
   tmux set-option -w -t "$WINDOW_ID" @cc_status "$STATUS" 2>/dev/null || true
-  # Use a short timeout when the user is already looking at the Claude tab
-  ACTIVE_WINDOW=$(tmux display-message -p '#{window_id}' 2>/dev/null || true)
-  TIMEOUT=60
-  [ "$ACTIVE_WINDOW" = "$WINDOW_ID" ] && TIMEOUT=3
-  tmux run-shell -b "sleep $TIMEOUT; tmux set-option -w -u -t '$WINDOW_ID' @cc_status 2>/dev/null" 2>/dev/null || true
+  tmux set-option -w -t "$WINDOW_ID" @cc_status_gen "$GEN" 2>/dev/null || true
+  # Per-pane status for the border indicator (pane-border-format in tmux.conf)
+  [ -n "$PANE_ID" ] && tmux set-option -p -t "$PANE_ID" @cc_pane_status "$STATUS" 2>/dev/null || true
+  TIMEOUT="${MELDR_CC_TIMEOUT:-120}"
+  tmux run-shell -b "sleep $TIMEOUT; \
+    CUR=\$(tmux show-options -wqv -t '$WINDOW_ID' @cc_status_gen 2>/dev/null); \
+    [ \"\$CUR\" = '$GEN' ] && tmux set-option -wu -t '$WINDOW_ID' @cc_status 2>/dev/null; \
+    tmux set-option -wu -t '$WINDOW_ID' @cc_status_gen 2>/dev/null; \
+    [ -n '$PANE_ID' ] && tmux set-option -pu -t '$PANE_ID' @cc_pane_status 2>/dev/null" \
+    2>/dev/null || true
 fi
