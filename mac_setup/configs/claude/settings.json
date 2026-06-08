@@ -25,6 +25,17 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/claude-session-start.sh"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {

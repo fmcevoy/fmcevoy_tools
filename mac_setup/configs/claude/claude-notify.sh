@@ -43,6 +43,11 @@ elif [ -n "${MELDR_AGENT_SESSION:-}" ]; then
   PANE_ID=$(cat "$SIDECAR" 2>/dev/null || true)
   [ -n "$PANE_ID" ] && WINDOW_ID=$(tmux display-message -t "$PANE_ID" -p '#{window_id}' 2>/dev/null || true)
   [ -n "$PANE_ID" ] && WINDOW_NAME=$(tmux display-message -t "$PANE_ID" -p '#{window_name}' 2>/dev/null || true)
+elif [ -n "$SESSION_ID" ] && [ -f "$STATE_DIR/${SESSION_ID}.parent_pane" ]; then
+  # claude agents path: sidecar written by claude-session-start.sh at session startup
+  PANE_ID=$(cat "$STATE_DIR/${SESSION_ID}.parent_pane" 2>/dev/null || true)
+  [ -n "$PANE_ID" ] && WINDOW_ID=$(tmux display-message -t "$PANE_ID" -p '#{window_id}' 2>/dev/null || true)
+  [ -n "$PANE_ID" ] && WINDOW_NAME=$(tmux display-message -t "$PANE_ID" -p '#{window_name}' 2>/dev/null || true)
 fi
 
 # Write state file (readable by recon, meldr agents, etc.) — must come after STATUS is set

@@ -22,6 +22,7 @@ tap "supabase/tap"
 # ---------------------------------------------------------------------------
 brew "atuin"
 brew "bat"
+brew "bats-core"
 brew "btop"
 brew "difftastic"
 brew "direnv"
