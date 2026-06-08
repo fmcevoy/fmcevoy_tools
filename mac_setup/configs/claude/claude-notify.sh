@@ -53,28 +53,48 @@ elif [ -n "$SESSION_ID" ] && [ -f "$STATE_DIR/${SESSION_ID}.parent_pane" ]; then
   [ -n "$PANE_ID" ] && WINDOW_NAME=$(tmux display-message -t "$PANE_ID" -p '#{window_name}' 2>/dev/null || true)
 fi
 
-# Inspect the last assistant turn in the transcript to classify Stop events.
+# Inspect the assistant turn that just completed and classify the Stop event.
 # Returns "waiting" when the turn ends with a question, contains "needs input:",
 # or used the AskUserQuestion tool; "done" otherwise. Best-effort: falls back to
 # "done" on any parse failure so the flash always fires.
+#
+# Two subtleties handled here:
+#   1. One assistant turn spans multiple JSONL lines (thinking + text + tool_use
+#      blocks). Looking only at the last line misses the text block when the
+#      turn ends with tool_use, so we scan every assistant line written after
+#      the most recent user message.
+#   2. Claude Code can invoke the Stop hook before the final assistant line is
+#      flushed to the transcript (more visible on background sessions). We poll
+#      briefly for new assistant content rather than reading once and bailing.
 classify_stop_status() {
   local transcript="$1"
   [ -z "$transcript" ] || [ ! -f "$transcript" ] && { echo "done"; return; }
 
-  local last_asst
-  last_asst=$(grep -a '"role"[[:space:]]*:[[:space:]]*"assistant"' "$transcript" 2>/dev/null | tail -1)
-  [ -z "$last_asst" ] && { echo "done"; return; }
+  local asst_lines="" last_user_line attempt=0
+  while [ $attempt -lt 6 ]; do
+    last_user_line=$(grep -an '"role"[[:space:]]*:[[:space:]]*"user"' "$transcript" 2>/dev/null | tail -1 | cut -d: -f1)
+    if [ -n "$last_user_line" ]; then
+      asst_lines=$(awk -v n="$last_user_line" 'NR>n' "$transcript" 2>/dev/null \
+                    | grep -a '"role"[[:space:]]*:[[:space:]]*"assistant"' 2>/dev/null)
+    else
+      asst_lines=$(grep -a '"role"[[:space:]]*:[[:space:]]*"assistant"' "$transcript" 2>/dev/null)
+    fi
+    [ -n "$asst_lines" ] && break
+    sleep 0.15
+    attempt=$((attempt + 1))
+  done
+  [ -z "$asst_lines" ] && { echo "done"; return; }
 
-  # AskUserQuestion tool_use in content array → always waiting
-  if printf '%s' "$last_asst" | \
-      jq -e '(.message.content // .content // [])[] | select(.type=="tool_use" and .name=="AskUserQuestion")' \
+  # AskUserQuestion tool_use in any block of this turn → always waiting.
+  if printf '%s\n' "$asst_lines" | \
+      jq -e -s '[.[] | (.message.content // .content // [])[] | select(.type=="tool_use" and .name=="AskUserQuestion")] | length > 0' \
       >/dev/null 2>&1; then
     echo "waiting"; return
   fi
 
   local text
-  text=$(printf '%s' "$last_asst" | \
-    jq -r '[(.message.content // .content // [])[] | select(.type=="text") | .text] | join("")' \
+  text=$(printf '%s\n' "$asst_lines" | \
+    jq -r -s '[.[] | (.message.content // .content // [])[] | select(.type=="text") | .text] | join("\n")' \
     2>/dev/null) || true
   [ -z "$text" ] && { echo "done"; return; }
 
