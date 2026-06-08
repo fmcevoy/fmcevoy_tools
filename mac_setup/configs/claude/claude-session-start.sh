@@ -14,13 +14,18 @@ SESSION_CWD=$(printf '%s' "$HOOK_DATA" | jq -r '.cwd // ""' 2>/dev/null)
 # Path 1: env var set (foreground session or env survived the daemon spawn)
 PANE_ID="${MELDR_TMUX_PANE:-}"
 
-# Path 2: most-recent launcher whose cwd is a prefix of session cwd
-# Path 3: most-recent launcher unconditionally (last-resort)
+# Path 2: most-recent unclaimed launcher whose cwd is a prefix of session cwd
+# Path 3: most-recent unclaimed launcher unconditionally (last-resort)
+# Claimed entries (*.claimed.json) are skipped so two simultaneous sessions
+# launched from different panes each resolve to their own entry.
+CHOSEN_FILE=""
 if [ -z "$PANE_ID" ] && [ -d "$LAUNCHER_DIR" ]; then
   BEST_PANE=""
   BEST_TS=-1
+  BEST_FILE=""
   FALLBACK_PANE=""
   FALLBACK_TS=-1
+  FALLBACK_FILE=""
 
   while IFS= read -r FILE; do
     [ -f "$FILE" ] || continue
@@ -34,6 +39,7 @@ if [ -z "$PANE_ID" ] && [ -d "$LAUNCHER_DIR" ]; then
     if [ "$LTS" -gt "$FALLBACK_TS" ] 2>/dev/null; then
       FALLBACK_PANE="$LPANE"
       FALLBACK_TS="$LTS"
+      FALLBACK_FILE="$FILE"
     fi
 
     # Prefer the most-recent entry whose cwd is a path-prefix of session cwd
@@ -42,17 +48,29 @@ if [ -z "$PANE_ID" ] && [ -d "$LAUNCHER_DIR" ]; then
       if [ "$LTS" -gt "$BEST_TS" ] 2>/dev/null; then
         BEST_PANE="$LPANE"
         BEST_TS="$LTS"
+        BEST_FILE="$FILE"
       fi
     fi
-  done < <(find "$LAUNCHER_DIR" -name '*.json' -not -empty 2>/dev/null)
+  done < <(find "$LAUNCHER_DIR" -name '*.json' -not -name '*.claimed.json' -not -empty 2>/dev/null)
 
-  PANE_ID="${BEST_PANE:-$FALLBACK_PANE}"
+  if [ -n "$BEST_PANE" ]; then
+    PANE_ID="$BEST_PANE"
+    CHOSEN_FILE="$BEST_FILE"
+  elif [ -n "$FALLBACK_PANE" ]; then
+    PANE_ID="$FALLBACK_PANE"
+    CHOSEN_FILE="$FALLBACK_FILE"
+  fi
 fi
 
 # Write the sidecar keyed by Claude's session UUID
 if [ -n "$PANE_ID" ]; then
   mkdir -p "$STATE_DIR"
   printf '%s' "$PANE_ID" > "$STATE_DIR/${SESSION_ID}.parent_pane"
+
+  # Claim the launcher entry so it won't be reused by a concurrent SessionStart
+  if [ -n "$CHOSEN_FILE" ] && [ -f "$CHOSEN_FILE" ]; then
+    mv -f "$CHOSEN_FILE" "${CHOSEN_FILE%.json}.claimed.json" 2>/dev/null || true
+  fi
 fi
 
 exit 0

@@ -96,3 +96,51 @@ _stdin() {
   run cat "$STATE_DIR/test-session-7.parent_pane"
   [ "$output" = "%env-wins" ]
 }
+
+# ── launcher claim / anti-collision ──────────────────────────────────────────
+
+@test "chosen launcher file is renamed to .claimed.json after resolve" {
+  _launcher "%10" "/projects/foo" 5000
+  local orig_file
+  orig_file=$(echo "$LAUNCHER_DIR"/5000-*.json)
+  _stdin "claim-session-1" "/projects/foo" | \
+    env HOME="$FAKE_HOME" bash "$SCRIPT"
+
+  # Original file should be gone; a .claimed.json should exist
+  [ ! -f "$orig_file" ]
+  run ls "$LAUNCHER_DIR"/*.claimed.json 2>/dev/null
+  [ "$status" -eq 0 ]
+  # Sidecar was still written
+  run cat "$STATE_DIR/claim-session-1.parent_pane"
+  [ "$output" = "%10" ]
+}
+
+@test "claimed entries are skipped by subsequent SessionStart" {
+  _launcher "%20" "/projects/bar" 8000
+  # First session claims the entry
+  _stdin "claim-session-a" "/projects/bar" | env HOME="$FAKE_HOME" bash "$SCRIPT"
+  [ "$(cat "$STATE_DIR/claim-session-a.parent_pane")" = "%20" ]
+
+  # Second session — no unclaimed entries remain
+  run env HOME="$FAKE_HOME" bash "$SCRIPT" <<< '{"session_id":"claim-session-b","cwd":"/projects/bar","source":"startup"}'
+  [ "$status" -eq 0 ]
+  [ ! -f "$STATE_DIR/claim-session-b.parent_pane" ]
+}
+
+@test "two concurrent sessions each claim their own entry" {
+  _launcher "%30" "/projects/ws" 1000
+  _launcher "%31" "/projects/ws" 2000
+
+  _stdin "concurrent-a" "/projects/ws" | env HOME="$FAKE_HOME" bash "$SCRIPT"
+  _stdin "concurrent-b" "/projects/ws" | env HOME="$FAKE_HOME" bash "$SCRIPT"
+
+  run cat "$STATE_DIR/concurrent-a.parent_pane"
+  local pane_a="$output"
+  run cat "$STATE_DIR/concurrent-b.parent_pane"
+  local pane_b="$output"
+
+  # Each session got a pane; they got different ones
+  [ -n "$pane_a" ]
+  [ -n "$pane_b" ]
+  [ "$pane_a" != "$pane_b" ]
+}

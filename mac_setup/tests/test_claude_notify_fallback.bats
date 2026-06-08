@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# Tests for the new SESSION_ID.parent_pane fallback in claude-notify.sh
+# Tests for claude-notify.sh: pane-resolution fallback and Stop classifier
 
 SCRIPT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../configs/claude" && pwd)/claude-notify.sh"
 
@@ -39,9 +39,24 @@ teardown() {
 }
 
 _hook_stdin() {
-  local sid="$1" cwd="${2:-/tmp}"
-  printf '{"session_id":"%s","cwd":"%s","hook_event_name":"Stop"}\n' "$sid" "$cwd"
+  local sid="$1" cwd="${2:-/tmp}" transcript="${3:-}"
+  if [ -n "$transcript" ]; then
+    printf '{"session_id":"%s","cwd":"%s","hook_event_name":"Stop","transcript_path":"%s"}\n' \
+      "$sid" "$cwd" "$transcript"
+  else
+    printf '{"session_id":"%s","cwd":"%s","hook_event_name":"Stop"}\n' "$sid" "$cwd"
+  fi
 }
+
+_make_transcript() {
+  local dir="$1" last_text="$2"
+  local f="$dir/transcript.jsonl"
+  printf '{"role":"user","content":"hello"}\n' >> "$f"
+  printf '{"role":"assistant","content":[{"type":"text","text":"%s"}]}\n' "$last_text" >> "$f"
+  echo "$f"
+}
+
+# ── pane-resolution fallback ──────────────────────────────────────────────────
 
 @test "resolves pane from session_id.parent_pane sidecar" {
   local SID="abc-123-def"
@@ -51,7 +66,6 @@ _hook_stdin() {
     MELDR_TMUX_PANE="" TMUX="" TMUX_PANE="" MELDR_AGENT_SESSION="" \
     bash "$SCRIPT" stop
 
-  # Verify state file was written with correct pane
   [ -f "$STATE_DIR/${SID}.json" ]
   run jq -r '.pane' "$STATE_DIR/${SID}.json"
   [ "$output" = "%55" ]
@@ -99,4 +113,103 @@ EOF
     MELDR_TMUX_PANE="" TMUX="" TMUX_PANE="" MELDR_AGENT_SESSION="" \
     bash "$SCRIPT" stop <<< "{\"session_id\":\"$SID\",\"cwd\":\"/tmp\",\"hook_event_name\":\"Stop\"}"
   [ "$status" -eq 0 ]
+}
+
+# ── Stop classifier ───────────────────────────────────────────────────────────
+
+@test "Stop with transcript ending in '?' → status=waiting" {
+  local SID="q-session"
+  local TF
+  TF=$(_make_transcript "$FAKE_HOME" "Should I use tabs or spaces?")
+  printf '%%55' > "$STATE_DIR/${SID}.parent_pane"
+
+  _hook_stdin "$SID" "/tmp" "$TF" | env HOME="$FAKE_HOME" \
+    MELDR_TMUX_PANE="" TMUX="" TMUX_PANE="" MELDR_AGENT_SESSION="" \
+    bash "$SCRIPT" stop
+
+  run jq -r '.status' "$STATE_DIR/${SID}.json"
+  [ "$output" = "waiting" ]
+}
+
+@test "Stop with transcript containing 'needs input:' → status=waiting" {
+  local SID="ni-session"
+  local TF
+  TF=$(_make_transcript "$FAKE_HOME" "needs input: should I add tests")
+  printf '%%55' > "$STATE_DIR/${SID}.parent_pane"
+
+  _hook_stdin "$SID" "/tmp" "$TF" | env HOME="$FAKE_HOME" \
+    MELDR_TMUX_PANE="" TMUX="" TMUX_PANE="" MELDR_AGENT_SESSION="" \
+    bash "$SCRIPT" stop
+
+  run jq -r '.status' "$STATE_DIR/${SID}.json"
+  [ "$output" = "waiting" ]
+}
+
+@test "Stop with transcript ending in statement → status=done" {
+  local SID="done-session"
+  local TF
+  TF=$(_make_transcript "$FAKE_HOME" "All tests pass.")
+  printf '%%55' > "$STATE_DIR/${SID}.parent_pane"
+
+  _hook_stdin "$SID" "/tmp" "$TF" | env HOME="$FAKE_HOME" \
+    MELDR_TMUX_PANE="" TMUX="" TMUX_PANE="" MELDR_AGENT_SESSION="" \
+    bash "$SCRIPT" stop
+
+  run jq -r '.status' "$STATE_DIR/${SID}.json"
+  [ "$output" = "done" ]
+}
+
+@test "Stop with missing transcript_path → falls back to status=done" {
+  local SID="no-transcript-session"
+  printf '%%55' > "$STATE_DIR/${SID}.parent_pane"
+
+  _hook_stdin "$SID" | env HOME="$FAKE_HOME" \
+    MELDR_TMUX_PANE="" TMUX="" TMUX_PANE="" MELDR_AGENT_SESSION="" \
+    bash "$SCRIPT" stop
+
+  run jq -r '.status' "$STATE_DIR/${SID}.json"
+  [ "$output" = "done" ]
+}
+
+@test "Stop with nonexistent transcript file → falls back to status=done" {
+  local SID="missing-file-session"
+  printf '%%55' > "$STATE_DIR/${SID}.parent_pane"
+
+  _hook_stdin "$SID" "/tmp" "/nonexistent/path/transcript.jsonl" \
+    | env HOME="$FAKE_HOME" \
+      MELDR_TMUX_PANE="" TMUX="" TMUX_PANE="" MELDR_AGENT_SESSION="" \
+      bash "$SCRIPT" stop
+
+  run jq -r '.status' "$STATE_DIR/${SID}.json"
+  [ "$output" = "done" ]
+}
+
+@test "Stop with AskUserQuestion tool_use → status=waiting" {
+  local SID="askq-session"
+  local TF="$FAKE_HOME/askq_transcript.jsonl"
+  printf '{"role":"user","content":"hi"}\n' > "$TF"
+  printf '{"role":"assistant","content":[{"type":"tool_use","name":"AskUserQuestion","id":"t1","input":{"questions":[]}}]}\n' >> "$TF"
+  printf '%%55' > "$STATE_DIR/${SID}.parent_pane"
+
+  _hook_stdin "$SID" "/tmp" "$TF" | env HOME="$FAKE_HOME" \
+    MELDR_TMUX_PANE="" TMUX="" TMUX_PANE="" MELDR_AGENT_SESSION="" \
+    bash "$SCRIPT" stop
+
+  run jq -r '.status' "$STATE_DIR/${SID}.json"
+  [ "$output" = "waiting" ]
+}
+
+# ── Timeout default ───────────────────────────────────────────────────────────
+
+@test "notify event still produces status=waiting" {
+  local SID="notify-session"
+  printf '%%55' > "$STATE_DIR/${SID}.parent_pane"
+
+  printf '{"session_id":"%s","cwd":"/tmp","hook_event_name":"Notification"}\n' "$SID" \
+    | env HOME="$FAKE_HOME" \
+      MELDR_TMUX_PANE="" TMUX="" TMUX_PANE="" MELDR_AGENT_SESSION="" \
+      bash "$SCRIPT" notify
+
+  run jq -r '.status' "$STATE_DIR/${SID}.json"
+  [ "$output" = "waiting" ]
 }
