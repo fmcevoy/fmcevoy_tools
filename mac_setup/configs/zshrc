@@ -109,7 +109,8 @@ claude() {
   local pane="${TMUX_PANE:-}"
   local win=""
   [ -n "$pane" ] && win=$(tmux display-message -p '#{window_id}' 2>/dev/null || true)
-  [ "${1:-}" = "agents" ] && bash ~/.claude/claude-agents-register-launcher.sh 2>/dev/null
+  MELDR_TMUX_PANE="$pane" MELDR_TMUX_WINDOW_ID="$win" \
+    meldr claude-hook register-launcher 2>/dev/null
   MELDR_TMUX_PANE="$pane" MELDR_TMUX_WINDOW_ID="$win" command claude "$@"
 }
 alias agents='recon'

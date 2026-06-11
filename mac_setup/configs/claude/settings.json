@@ -1,92 +1,110 @@
 {
-  "permissions": {
-    "defaultMode": "auto"
-  },
-  "model": "opusplan",
-  "hooks": {
-    "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/claude-notify.sh stop"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/claude-notify.sh notify"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "startup",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/claude-session-start.sh"
-          }
-        ]
-      }
-    ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.claude/statusline-command.sh"
-  },
+  "agentPushNotifEnabled": true,
+  "autoDreamEnabled": true,
+  "effortLevel": "xhigh",
   "enabledPlugins": {
-    "rust-analyzer-lsp@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": false,
-    "github@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "pr-review-toolkit@claude-plugins-official": true,
-    "supabase@claude-plugins-official": false,
     "claude-code-setup@claude-plugins-official": true,
-    "vercel@claude-plugins-official": false,
-    "slack@claude-plugins-official": true,
-    "stripe@claude-plugins-official": false,
     "claude-md-management@claude-plugins-official": true,
     "cli-anything@cli-anything": true,
+    "code-review@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "codex@openai-codex": true,
+    "context7@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "ralph-loop@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "slack@claude-plugins-official": true,
+    "stripe@claude-plugins-official": false,
+    "supabase@claude-plugins-official": false,
+    "superpowers@claude-plugins-official": false,
     "telegram@claude-plugins-official": true,
-    "codex@openai-codex": true
+    "vercel@claude-plugins-official": false
   },
   "extraKnownMarketplaces": {
     "cli-anything": {
       "source": {
-        "source": "github",
-        "repo": "HKUDS/CLI-Anything"
+        "repo": "HKUDS/CLI-Anything",
+        "source": "github"
       }
     },
     "openai-codex": {
       "source": {
-        "source": "github",
-        "repo": "openai/codex-plugin-cc"
+        "repo": "openai/codex-plugin-cc",
+        "source": "github"
       }
     }
   },
-  "effortLevel": "xhigh",
+  "hooks": {
+    "Notification": [
+      {
+        "_meldr": true,
+        "hooks": [
+          {
+            "command": "meldr claude-hook notify",
+            "type": "command"
+          },
+          {
+            "_meldr": true,
+            "command": "meldr claude-hook notify",
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ],
+    "SessionStart": [
+      {
+        "_meldr": true,
+        "hooks": [
+          {
+            "command": "meldr claude-hook session-start",
+            "type": "command"
+          },
+          {
+            "_meldr": true,
+            "command": "meldr claude-hook session-start",
+            "type": "command"
+          }
+        ],
+        "matcher": "startup"
+      }
+    ],
+    "Stop": [
+      {
+        "_meldr": true,
+        "hooks": [
+          {
+            "command": "meldr claude-hook stop",
+            "type": "command"
+          },
+          {
+            "_meldr": true,
+            "command": "meldr claude-hook stop",
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ]
+  },
+  "model": "opusplan",
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "skipAutoPermissionPrompt": true,
+  "skipDangerousModePermissionPrompt": true,
+  "statusLine": {
+    "command": "bash ~/.claude/statusline-command.sh",
+    "type": "command"
+  },
+  "theme": "dark",
   "voice": {
     "enabled": true,
     "mode": "tap"
   },
-  "autoDreamEnabled": true,
-  "skipDangerousModePermissionPrompt": true,
-  "theme": "dark",
-  "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true,
   "voiceEnabled": true
 }

@@ -31,7 +31,7 @@ mac_setup/scripts/fix_kiro_tmux.sh
 - `mac_setup/cli-upgrades` — unified upgrade manager, symlinked to `~/cli-upgrades`
 - `mac_setup/Brewfile` — all Homebrew installs (formulas + casks + taps)
 - `mac_setup/configs/` — dotfiles symlinked to `$HOME` by setup.sh step 1
-- `mac_setup/configs/claude/` — Claude Code config: `settings.json`, `mcp.json`, `claude-notify.sh`, `claude-session-start.sh`, `claude-agents-register-launcher.sh`, `statusline-command.sh`
+- `mac_setup/configs/claude/` — Claude Code config: `settings.json`, `mcp.json`, `statusline-command.sh`
 - `mac_setup/scripts/` — one-off maintenance scripts
 - `.claude/skills/` — local Claude Code skills (e.g., `add-coding-agent`)
 
@@ -67,6 +67,6 @@ Headless aliases follow `<letter>ch` pattern: `cch` (claude), `gch` (gemini), `a
 - **Secrets** live in `~/ee` (sourced by zshrc, chmod 600, never committed). See `mac_setup/SECRETS_CHECKLIST.md`.
 - **pipx-managed tools** (e.g., Poetry) live in `~/.local/bin` — already first on `$PATH` in zshrc.
 - **Poetry** is pinned to v1.x via `uv tool install "poetry>=1,<2"` — never install via Homebrew (brew only ships v2).
-- **Claude Code** uses `opusplan` model, auto mode, with Stop/Notification hooks wired to `~/.claude/claude-notify.sh` and a SessionStart hook wired to `~/.claude/claude-session-start.sh`. The SessionStart hook enables tab-lighting for `claude agents` background sessions: it reads a launcher registry written by the `claude()` zshrc wrapper, resolves the originating tmux pane, and writes a `<session_id>.parent_pane` sidecar that `claude-notify.sh` consults at Stop/Notification time. Config lives in `mac_setup/configs/claude/settings.json`.
+- **Claude Code** uses `opusplan` model, auto mode. Hooks (Stop, Notification, SessionStart) are managed by meldr — run `meldr install-hooks` to wire them into `~/.claude/settings.json`. Tab-lighting for `claude agents` sessions is handled by `meldr claude-hook`; the `claude()` zshrc wrapper calls `meldr claude-hook register-launcher` before each invocation. Config template lives in `mac_setup/configs/claude/settings.json`.
 - **MCP config** lives in `~/.claude/.mcp.json` (copied, not symlinked — secrets injected at setup time). Template is `mac_setup/configs/claude/mcp.json`.
 - **Kiro CLI** installs shell hooks that corrupt starship in tmux; the zshrc neutralization block (after the Kiro post block) disables them. If a Kiro upgrade breaks ordering, run `mac_setup/scripts/fix_kiro_tmux.sh`.

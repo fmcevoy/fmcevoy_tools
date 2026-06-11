@@ -63,9 +63,6 @@ All configs are symlinked from `configs/` to `$HOME`. If a file already exists a
 | `configs/claude/settings.json` | `~/.claude/settings.json` | — | Claude Code settings and hooks |
 | `configs/claude/statusline-command.sh` | `~/.claude/statusline-command.sh` | — | Claude Code statusline script |
 | `configs/claude/mcp.json` | `~/.claude/.mcp.json` | — | Copied, not symlinked (secrets injected) |
-| `configs/claude/claude-notify.sh` | `~/.claude/claude-notify.sh` | — | Hook script for Stop/Notification events |
-| `configs/claude/claude-session-start.sh` | `~/.claude/claude-session-start.sh` | — | SessionStart hook: resolves tmux pane for `claude agents` bg sessions |
-| `configs/claude/claude-agents-register-launcher.sh` | `~/.claude/claude-agents-register-launcher.sh` | — | Called by zshrc when `claude agents` is invoked; writes pane registry entry |
 | `configs/meldr_prompt.sh` | `~/.config/meldr_prompt.sh` | — | meldr starship prompt integration |
 
 Local override files are created empty by `setup.sh` and are never committed. They load after the managed config, so values set in `.local` files win.
@@ -109,10 +106,9 @@ Set in zshrc, override in `~/.zshrc.local` or `~/ee`:
 | `Funk.aiff` ping | Claude is waiting on you (`Notification`) | Claude Code hook → `afplay` |
 | Tab flashes red/yellow | `Stop` (red) or `Notification` (yellow), focused or inactive tab | Hook sets `@cc_status` on the tmux window; `window-status-format` conditionals in `tmux.conf` paint it. Clears on tab focus; auto-clears after 3 s if the Claude tab is active, 60 s otherwise. |
 
-Hook scripts: `mac_setup/configs/claude/claude-notify.sh` (Stop/Notification) and `claude-session-start.sh` (SessionStart) → symlinked to `~/.claude/`.
-Wired in `configs/claude/settings.json` under `hooks.Stop`, `hooks.Notification`, and `hooks.SessionStart`.
+Hooks are managed by meldr — run `meldr install-hooks` to write `meldr claude-hook stop|notify|session-start` into `~/.claude/settings.json`. The `settings.json` template in this repo reflects the expected meldr-managed hook commands.
 
-**Tab-lighting for `claude agents` sessions.** Background sessions started from the `claude agents` UI are spawned by a daemon that strips tmux env vars. At session startup, `claude-session-start.sh` consults the launcher registry (`~/.cache/claude-agents/launchers/`) to find which tmux pane invoked `claude agents`, then writes a `<session_id>.parent_pane` sidecar. When the Stop/Notification hook fires, `claude-notify.sh` reads the sidecar and flashes the correct tab. The registry is populated by the zshrc `claude()` wrapper when `claude agents` is invoked.
+**Tab-lighting for `claude agents` sessions.** Background sessions started from the `claude agents` UI are resolved to the correct tmux pane by meldr's multi-tier resolver (`meldr claude-hook session-start`). The `claude()` zshrc wrapper calls `meldr claude-hook register-launcher` before each invocation to write a launcher-registry entry. When the Stop/Notification hook fires, `meldr claude-hook stop|notify` reads the registry/sidecar, classifies status, and flashes the correct tab via tmux user-options (`@cc_status`). Run `meldr doctor hooks` to verify the full pipeline.
 
 State files written per-session to `~/.cache/claude-agents/<session_id>.json` — readable by dashboard tools.
 
