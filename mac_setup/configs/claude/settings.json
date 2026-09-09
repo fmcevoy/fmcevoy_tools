@@ -1,50 +1,7 @@
 {
-  "permissions": {
-    "defaultMode": "auto"
-  },
-  "model": "opus",
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "meldr claude-hook notify",
-            "_meldr": true
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "startup",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "meldr claude-hook session-start",
-            "_meldr": true
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "meldr claude-hook stop",
-            "_meldr": true
-          }
-        ]
-      }
-    ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.claude/statusline-command.sh"
-  },
+  "agentPushNotifEnabled": true,
+  "autoDreamEnabled": true,
+  "effortLevel": "xhigh",
   "enabledPlugins": {
     "claude-code-setup@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
@@ -70,31 +27,74 @@
   "extraKnownMarketplaces": {
     "cli-anything": {
       "source": {
-        "source": "github",
-        "repo": "HKUDS/CLI-Anything"
+        "repo": "HKUDS/CLI-Anything",
+        "source": "github"
       }
     },
     "openai-codex": {
       "source": {
-        "source": "github",
-        "repo": "openai/codex-plugin-cc"
+        "repo": "openai/codex-plugin-cc",
+        "source": "github"
       }
     }
   },
-  "effortLevel": "xhigh",
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "_meldr": true,
+            "command": "meldr claude-hook notify",
+            "type": "command"
+          }
+        ],
+        "matcher": "permission_prompt|idle_prompt|elicitation_dialog|elicitation_url_dialog|agent_needs_input"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "_meldr": true,
+            "command": "meldr claude-hook session-start",
+            "type": "command"
+          }
+        ],
+        "matcher": "startup|resume|clear|fork"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "_meldr": true,
+            "command": "meldr claude-hook stop",
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ]
+  },
+  "model": "opus",
   "modelSettings": {
     "claude-fable-5-1": {
       "effortLevel": "high"
     }
   },
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "skipAutoPermissionPrompt": true,
+  "skipDangerousModePermissionPrompt": true,
+  "statusLine": {
+    "command": "bash ~/.claude/statusline-command.sh",
+    "type": "command"
+  },
+  "theme": "dark",
   "voice": {
     "enabled": true,
     "mode": "tap"
   },
-  "autoDreamEnabled": true,
-  "skipDangerousModePermissionPrompt": true,
-  "theme": "dark",
-  "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true,
   "voiceEnabled": true
 }
