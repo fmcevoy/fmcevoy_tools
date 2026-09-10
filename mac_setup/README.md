@@ -100,17 +100,41 @@ Set in zshrc, override in `~/.zshrc.local` or `~/ee`:
 
 ## Claude Session Notifications
 
-| Signal | Event | Mechanism |
-|--------|-------|-----------|
-| `Glass.aiff` chime | Claude finishes a task (`Stop`) | Claude Code hook → `afplay` |
-| `Funk.aiff` ping | Claude is waiting on you (`Notification`) | Claude Code hook → `afplay` |
-| Tab flashes red/yellow | `Stop` (red) or `Notification` (yellow), focused or inactive tab | Hook sets `@cc_status` on the tmux window; `window-status-format` conditionals in `tmux.conf` paint it. Clears on tab focus; auto-clears after 3 s if the Claude tab is active, 60 s otherwise. |
+| Signal | Meaning |
+|--------|---------|
+| `Glass.aiff` + red tab, red pane border | A Claude session in that pane finished |
+| `Funk.aiff` + orange tab, orange pane border | It is waiting on you (a question, `AskUserQuestion`, or `needs input:`) |
+| `Pop.aiff` + purple `⇣` tab | A Claude **background job** finished in that worktree |
+| `Submarine.aiff` + blue `⇣` tab | A background job is waiting on you |
 
-Hooks are managed by meldr — run `meldr install-hooks` to write `meldr claude-hook stop|notify|session-start` into `~/.claude/settings.json`. The `settings.json` template in this repo reflects the expected meldr-managed hook commands.
+The background states are separate because Claude runs background jobs in one
+detached host process that belongs to no pane, so meldr can identify the worktree
+window but not which pane — the indicator says so rather than picking one.
 
-**Tab-lighting for `claude agents` sessions.** Background sessions started from the `claude agents` UI are resolved to the correct tmux pane by meldr's multi-tier resolver (`meldr claude-hook session-start`). The `claude()` zshrc wrapper calls `meldr claude-hook register-launcher` before each invocation to write a launcher-registry entry. When the Stop/Notification hook fires, `meldr claude-hook stop|notify` reads the registry/sidecar, classifies status, and flashes the correct tab via tmux user-options (`@cc_status`). Run `meldr doctor hooks` to verify the full pipeline.
+The pane is the source of truth (`@cc_pane_status`); a window's `@cc_status` is
+derived from its panes and shows the most urgent, so one agent finishing never
+hides a sibling that is still waiting. Indicators clear when you select the pane
+or window, and otherwise expire after `MELDR_CC_TIMEOUT` seconds (default 5).
 
-State files written per-session to `~/.cache/claude-agents/<session_id>.json` — readable by dashboard tools.
+Hooks are managed by meldr — run `meldr install-hooks` to write one
+`meldr claude-hook stop|notify|session-start` entry per event into
+`~/.claude/settings.json`. `Notification` is registered only for the types that
+mean the agent is genuinely blocked on you, so routine events like `auth_success`
+no longer light the tab.
+
+**No `claude()` shell wrapper.** There used to be one in `configs/zshrc` that
+exported `MELDR_TMUX_PANE` / `MELDR_TMUX_WINDOW_ID`. It computed the window with
+an untargeted `tmux display-message`, which returns the *focused* window rather
+than the pane's own, so it was a cause of notifications landing on the wrong tab.
+meldr now derives the pane from the process tree and a live `tmux list-panes`
+snapshot and reads neither variable.
+
+Run `meldr doctor hooks` from inside tmux to verify the whole pipeline: it runs
+the resolver through a nested shell, as Claude invokes a hook, and checks both the
+pane and the window against tmux.
+
+State files are written per session to `~/.cache/claude-agents/<session_id>.json`
+— readable by dashboard tools.
 
 ### Agent dashboard
 

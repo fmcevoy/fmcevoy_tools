@@ -41,46 +41,31 @@
   "hooks": {
     "Notification": [
       {
-        "_meldr": true,
         "hooks": [
-          {
-            "command": "meldr claude-hook notify",
-            "type": "command"
-          },
           {
             "_meldr": true,
             "command": "meldr claude-hook notify",
             "type": "command"
           }
         ],
-        "matcher": "*"
+        "matcher": "permission_prompt|idle_prompt|elicitation_dialog|elicitation_url_dialog|agent_needs_input"
       }
     ],
     "SessionStart": [
       {
-        "_meldr": true,
         "hooks": [
-          {
-            "command": "meldr claude-hook session-start",
-            "type": "command"
-          },
           {
             "_meldr": true,
             "command": "meldr claude-hook session-start",
             "type": "command"
           }
         ],
-        "matcher": "startup"
+        "matcher": "startup|resume|clear|fork"
       }
     ],
     "Stop": [
       {
-        "_meldr": true,
         "hooks": [
-          {
-            "command": "meldr claude-hook stop",
-            "type": "command"
-          },
           {
             "_meldr": true,
             "command": "meldr claude-hook stop",
@@ -91,7 +76,12 @@
       }
     ]
   },
-  "model": "opusplan",
+  "model": "opus",
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "high"
+    }
+  },
   "permissions": {
     "defaultMode": "auto"
   },
