@@ -32,12 +32,14 @@ done
 BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
+RED='\033[0;31m'
 RESET='\033[0m'
 
 info()  { printf "${BLUE}==> %s${RESET}\n" "$1"; }
 ok()    { printf "${GREEN} ✓  %s${RESET}\n" "$1"; }
 skip()  { printf "${YELLOW} –  %s${RESET}\n" "$1"; }
 warn()  { printf "${YELLOW} ⚠  %s${RESET}\n" "$1"; }
+error() { printf "${RED} ✗  %s${RESET}\n" "$1" >&2; }
 
 run() {
   if $DRY_RUN; then
@@ -66,7 +68,8 @@ link_file() {
 
   # If target exists (file or different symlink), backup
   if [[ -e "$target" ]] || [[ -L "$target" ]]; then
-    local backup="${target}.backup.$(date +%Y%m%d-%H%M%S)"
+    local backup
+    backup="${target}.backup.$(date +%Y%m%d-%H%M%S)"
     warn "Backing up $target → $backup"
     run mv "$target" "$backup"
   fi
@@ -635,7 +638,7 @@ GITLOCAL
   fi
   warn "Edit ~/.gitconfig.local with your name and email"
 else
-  ok "~/.gitconfig.local already exists"
+  ok "$HOME/.gitconfig.local already exists"
 fi
 echo ""
 
