@@ -38,44 +38,6 @@
       }
     }
   },
-  "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "_meldr": true,
-            "command": "meldr claude-hook notify",
-            "type": "command"
-          }
-        ],
-        "matcher": "permission_prompt|idle_prompt|elicitation_dialog|elicitation_url_dialog|agent_needs_input"
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "_meldr": true,
-            "command": "meldr claude-hook session-start",
-            "type": "command"
-          }
-        ],
-        "matcher": "startup|resume|clear|fork"
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "_meldr": true,
-            "command": "meldr claude-hook stop",
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      }
-    ]
-  },
   "model": "opus",
   "modelSettings": {
     "claude-fable-5-1": {

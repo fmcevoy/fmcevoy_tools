@@ -79,12 +79,83 @@ link_file() {
   ok "Linked: $target"
 }
 
+# ---------------------------------------------------------------------------
+# Source shim — for files third parties append to
+# ---------------------------------------------------------------------------
+# Symlinking a $HOME file straight at the repo means anything appended to it
+# lands in tracked source and dirties a pristine checkout — which is what
+# happened to ~/.zshrc when a third-party installer appended its block on
+# 2026-09-10. Install a small real file that sources the managed config
+# instead: appends land in the untracked shim, after the managed content, so
+# they still win. Re-running is safe: a shim that already sources the managed
+# file is left exactly as the user (or an installer) left it.
+source_shim() {
+  local source="$1" target="$2"
+  local line="source \"$source\""
+
+  if [[ -f "$target" ]] && [[ ! -L "$target" ]] && grep -qF -- "$line" "$target"; then
+    ok "Already sourcing managed config: $target"
+    return 0
+  fi
+
+  if [[ -e "$target" ]] || [[ -L "$target" ]]; then
+    local backup
+    backup="${target}.backup.$(date +%Y%m%d-%H%M%S)"
+    warn "Backing up $target → $backup"
+    run mv "$target" "$backup"
+  fi
+
+  info "Creating $target (sources $source)"
+  if $DRY_RUN; then
+    skip "[dry-run] write shim $target"
+  else
+    cat > "$target" <<SHIM
+# Managed by fmcevoy_tools/mac_setup/setup.sh — this file is yours to append to.
+# Machine-local settings belong in ~/.zshrc.local, sourced by the file below.
+$line
+SHIM
+  fi
+  $DRY_RUN || ok "Shimmed: $target"
+}
+
+# ---------------------------------------------------------------------------
+# Seed file — for configs the application rewrites
+# ---------------------------------------------------------------------------
+# A symlink sends every one of those writes into tracked source. `meldr
+# install-hooks` canonicalises ~/.claude/settings.json before writing, which is
+# how meldr's hook block came to be committed to this repo; Claude Code itself
+# rewrites the same file whenever a setting changes. The repo copy is a seed
+# for a fresh machine, not the live config, so an existing file is never
+# overwritten (same contract as mcp.json in Step 19).
+seed_file() {
+  local source="$1" target="$2"
+
+  if [[ -f "$target" ]] && [[ ! -L "$target" ]]; then
+    ok "Already present, left alone: $target"
+    return 0
+  fi
+
+  if [[ -e "$target" ]] || [[ -L "$target" ]]; then
+    local backup
+    backup="${target}.backup.$(date +%Y%m%d-%H%M%S)"
+    warn "Unlinking managed symlink $target → $backup"
+    run mv "$target" "$backup"
+  fi
+
+  local parent
+  parent="$(dirname "$target")"
+  [[ -d "$parent" ]] || run mkdir -p "$parent"
+  info "Seeding $source → $target"
+  run cp "$source" "$target"
+  $DRY_RUN || ok "Seeded: $target"
+}
+
 # =============================================================================
 # Step 1: Symlink configs
 # =============================================================================
 info "Step 1: Symlinking config files..."
 
-link_file "$SCRIPT_DIR/configs/zshrc"              "$HOME/.zshrc"
+source_shim "$SCRIPT_DIR/configs/zshrc"            "$HOME/.zshrc"
 link_file "$SCRIPT_DIR/configs/gitconfig"           "$HOME/.gitconfig"
 link_file "$SCRIPT_DIR/configs/gitignore_global"    "$HOME/.gitignore"
 link_file "$SCRIPT_DIR/configs/vim/init.vim"        "$HOME/.config/nvim/init.vim"
@@ -95,7 +166,7 @@ link_file "$SCRIPT_DIR/configs/ghostty/config"      "$HOME/.config/ghostty/confi
 link_file "$SCRIPT_DIR/configs/starship.toml"       "$HOME/.config/starship.toml"
 link_file "$SCRIPT_DIR/configs/meldr_prompt.sh"    "$HOME/.config/meldr_prompt.sh"
 link_file "$SCRIPT_DIR/configs/completions.zsh"    "$HOME/.completions.zsh"
-link_file "$SCRIPT_DIR/configs/claude/settings.json"                     "$HOME/.claude/settings.json"
+seed_file "$SCRIPT_DIR/configs/claude/settings.json"                     "$HOME/.claude/settings.json"
 link_file "$SCRIPT_DIR/configs/claude/statusline-command.sh"             "$HOME/.claude/statusline-command.sh"
 link_file "$SCRIPT_DIR/cli-upgrades"                          "$HOME/cli-upgrades"
 

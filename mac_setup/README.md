@@ -21,7 +21,7 @@ cd ~/fmcevoy_tools/mac_setup
 
 ## What It Does
 
-1. **Symlink configs** — links files to `$HOME` (backs up existing to `.backup.<timestamp>`); also creates `.local` override stubs
+1. **Symlink configs** — links files to `$HOME` (backs up existing to `.backup.<timestamp>`); also creates `.local` override stubs. Two targets are deliberately not symlinks — see below
 2. **Homebrew** — install if missing, run `brew bundle` from Brewfile
 3. **vim-plug** — Neovim plugin manager
 4. **TPM** — tmux plugin manager
@@ -45,11 +45,16 @@ cd ~/fmcevoy_tools/mac_setup
 
 ## Config Files
 
-All configs are symlinked from `configs/` to `$HOME`. If a file already exists at the target, it is moved to `<target>.backup.<timestamp>` before linking.
+Most configs are symlinked from `configs/` to `$HOME`. If a file already exists at the target, it is moved to `<target>.backup.<timestamp>` before linking.
+
+Two targets are handled differently, because something other than this repo writes to them. A symlink would send those writes straight into tracked source and dirty a pristine checkout:
+
+- **`~/.zshrc` is a real file**, three lines long, that `source`s `configs/zshrc`. Third-party installers append to `~/.zshrc` — one did on 2026-09-10 — and those appends now land in the untracked shim, after the managed config, so they still take effect. Re-running `setup.sh` leaves an existing shim untouched.
+- **`~/.claude/settings.json` is copied, not linked.** Claude Code rewrites it whenever a setting changes, and `meldr install-hooks` canonicalises the path before writing — which is how meldr's hook block came to be committed here. The repo copy is a seed for a fresh machine and is never written over an existing file, the same contract `mcp.json` already uses. The hook entries themselves are meldr's to install, so the seed no longer carries them.
 
 | Source | Target | Local override | Override mechanism |
 |--------|--------|---------------|-------------------|
-| `configs/zshrc` | `~/.zshrc` | `~/.zshrc.local` | `source` at end |
+| `configs/zshrc` | `~/.zshrc` | `~/.zshrc.local` | `source` at end; `~/.zshrc` is a real shim, not a symlink |
 | `configs/completions.zsh` | `~/.completions.zsh` | `~/.completions.local.zsh` | `source` at end |
 | `configs/gitconfig` | `~/.gitconfig` | `~/.gitconfig.local` | `[include] path` |
 | `configs/tmux/tmux.conf` | `~/.tmux.conf` | `~/.tmux.conf.local` | `source-file` at end |
@@ -61,7 +66,7 @@ All configs are symlinked from `configs/` to `$HOME`. If a file already exists a
 | `configs/tmux/start_tmux_dev` | `~/start_tmux_dev` | — | |
 | `configs/tmux/help` | `~/tmux_help` | — | |
 | `cli-upgrades` | `~/cli-upgrades` | — | Symlinked, executable; invoked by `cliup` alias |
-| `configs/claude/settings.json` | `~/.claude/settings.json` | — | Claude Code settings and hooks |
+| `configs/claude/settings.json` | `~/.claude/settings.json` | — | Copied seed, not symlinked; hooks come from `meldr install-hooks` |
 | `configs/claude/statusline-command.sh` | `~/.claude/statusline-command.sh` | — | Claude Code statusline script |
 | `configs/claude/mcp.json` | `~/.claude/.mcp.json` | — | Copied, not symlinked (secrets injected) |
 | `configs/meldr_prompt.sh` | `~/.config/meldr_prompt.sh` | — | meldr starship prompt integration |
