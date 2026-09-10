@@ -30,7 +30,7 @@ cd ~/fmcevoy_tools/mac_setup
 7. **pyenv** — Python version manager
 8. **mise** — polyglot runtime manager
 9. **Poetry** — Python dependency manager (v1.x via uv; uninstalls Homebrew Poetry v2 if present)
-10. **meldr + recon** — multi-repo workspace manager and Claude agent dashboard (via `cargo install`)
+10. **meldr + recon** — multi-repo workspace manager and Claude agent dashboard (via `cargo install`); also runs `meldr install-hooks` so the Claude Code hooks match the binary just built
 11. **Fly CLI** — Fly.io deployment CLI
 12. **Vercel CLI** — Vercel deployment CLI (npm global)
 13. **Bun** — JavaScript runtime and toolkit (official installer)
@@ -41,6 +41,7 @@ cd ~/fmcevoy_tools/mac_setup
 18. **tmux plugins** — TPM install
 19. **Claude Code MCP** — copies `mcp.json` if missing, merges new servers into existing config, injects GitHub token from `gh` CLI if authenticated
 20. **Git identity** — creates `~/.gitconfig.local` template
+21. **Private laptop overlay** — runs `~/fmcevoy/laptop/bootstrap.sh` last if it exists and is executable; skips quietly otherwise
 
 ## Config Files
 
@@ -77,6 +78,8 @@ Local override files are created empty by `setup.sh` and are never committed. Th
 | `~/.config/nvim/init.local.vim` | `init.local.vim` |
 | `~/.config/ghostty/config.local` | `ghostty.config.local` |
 | `~/.ssh/config.local` | `ssh.config.local` |
+
+`setup.sh` also **finishes** by running `~/fmcevoy/laptop/bootstrap.sh` (Step 21) when that file exists and is executable, passing `--dry-run` through. This has to be the last step: Step 1 links this repo's base configs over paths the overlay also owns — `~/.claude/settings.json`, `~/start_tmux_dev` and others — so a `setup.sh` run that is not followed by the private bootstrap silently reverts the laptop to the public defaults. A failure in the overlay warns rather than aborting, and on a machine with no `~/fmcevoy` the step is a no-op.
 
 ## Shell Completions
 

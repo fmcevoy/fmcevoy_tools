@@ -145,7 +145,13 @@ if ! $SKIP_BREW; then
 
   if ! command -v brew &>/dev/null; then
     info "Installing Homebrew..."
-    run /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # Not `run`: the command substitution is evaluated before run() is called,
+    # so --dry-run would still fetch the installer over the network.
+    if $DRY_RUN; then
+      skip "[dry-run] /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+    else
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
     # Add to PATH for Apple Silicon
     if [[ -f /opt/homebrew/bin/brew ]]; then
       eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -161,14 +167,20 @@ if ! $SKIP_BREW; then
 
   info "Running brew bundle (this may take a while)..."
   if $NO_UPGRADE; then
-    brew bundle --file="$SCRIPT_DIR/Brewfile" --no-upgrade || warn "Some packages may have failed to install"
+    run brew bundle --file="$SCRIPT_DIR/Brewfile" --no-upgrade || warn "Some packages may have failed to install"
   else
-    brew bundle --file="$SCRIPT_DIR/Brewfile"  || warn "Some packages may have failed to install"
+    run brew bundle --file="$SCRIPT_DIR/Brewfile" || warn "Some packages may have failed to install"
   fi
 
   # Link keg-only formulae
   info "Linking keg-only formulae..."
-  brew link --force libpq 2>/dev/null && ok "Linked libpq" || skip "libpq already linked or unavailable"
+  if $DRY_RUN; then
+    skip "[dry-run] brew link --force libpq"
+  elif brew link --force libpq 2>/dev/null; then
+    ok "Linked libpq"
+  else
+    skip "libpq already linked or unavailable"
+  fi
 
   echo ""
 else
@@ -291,9 +303,16 @@ info "Step 9: Poetry..."
 
 # Remove brew poetry if present (brew only has v2, we need v1)
 if brew list poetry &>/dev/null; then
-  warn "Removing Homebrew poetry (v2) — we pin to v1 via uv"
-  run brew uninstall --ignore-dependencies poetry
-  hash -r 2>/dev/null || true
+  # `brew uninstall` fails outright on a pinned formula, and under `set -e`
+  # that aborts the rest of setup. Unpinning is the user's call, not ours.
+  if brew list --pinned 2>/dev/null | grep -qx poetry; then
+    warn "Homebrew poetry is pinned — leaving it in place"
+    warn "Run 'brew unpin poetry' and re-run setup if v2 is shadowing v1"
+  else
+    warn "Removing Homebrew poetry (v2) — we pin to v1 via uv"
+    run brew uninstall --ignore-dependencies poetry
+    hash -r 2>/dev/null || true
+  fi
 fi
 
 # Always force-install v1 via uv to ensure it wins on PATH
@@ -321,6 +340,14 @@ if command -v cargo &>/dev/null; then
   run cargo install --git https://github.com/fmcevoy/meldr.git --force
   ok "meldr installed ($(meldr --version 2>/dev/null || echo 'unknown'))"
 
+  # meldr owns the Stop/Notification/SessionStart hooks and carries the
+  # canonical matchers in its binary, so they drift whenever it is rebuilt
+  # without re-running this. Safe on a fresh machine: install-hooks creates
+  # ~/.claude/settings.json if absent, and rewrites its own entries in place
+  # rather than appending, so re-running changes nothing.
+  info "Wiring meldr's Claude Code hooks..."
+  run meldr install-hooks || warn "meldr install-hooks failed — check 'meldr doctor hooks'"
+
   info "Installing/updating recon via cargo..."
   run cargo install --git https://github.com/gavraz/recon
   ok "recon installed"
@@ -340,10 +367,11 @@ else
   info "Installing Fly CLI..."
   if $DRY_RUN; then
     skip "[dry-run] curl -L https://fly.io/install.sh | sh"
+  elif curl -L https://fly.io/install.sh | sh; then
+    ok "Fly CLI installed"
   else
-    curl -L https://fly.io/install.sh | sh
+    warn "Fly CLI install failed — continuing (installer URL may be unreachable)"
   fi
-  ok "Fly CLI installed"
 fi
 echo ""
 
@@ -376,10 +404,11 @@ else
   info "Installing Bun..."
   if $DRY_RUN; then
     skip "[dry-run] curl -fsSL https://bun.sh/install | bash"
+  elif curl -fsSL https://bun.sh/install | bash; then
+    ok "Bun installed"
   else
-    curl -fsSL https://bun.sh/install | bash
+    warn "Bun install failed — continuing (installer URL may be unreachable)"
   fi
-  ok "Bun installed"
 fi
 echo ""
 
@@ -393,10 +422,11 @@ if ! command -v agy &>/dev/null; then
   info "Installing Antigravity CLI..."
   if $DRY_RUN; then
     skip "[dry-run] curl -fsSL https://get.antigravity.ai/install.sh | bash"
+  elif curl -fsSL https://get.antigravity.ai/install.sh | bash; then
+    ok "Antigravity CLI installed"
   else
-    curl -fsSL https://get.antigravity.ai/install.sh | bash
+    warn "Antigravity CLI install failed — continuing (installer URL may be unreachable)"
   fi
-  ok "Antigravity CLI installed"
 else
   ok "Antigravity CLI already installed"
 fi
@@ -406,10 +436,11 @@ if ! command -v devin &>/dev/null; then
   info "Installing Devin CLI..."
   if $DRY_RUN; then
     skip "[dry-run] curl -fsSL https://cli.devin.ai/install.sh | bash"
+  elif curl -fsSL https://cli.devin.ai/install.sh | bash; then
+    ok "Devin CLI installed"
   else
-    curl -fsSL https://cli.devin.ai/install.sh | bash
+    warn "Devin CLI install failed — continuing (installer URL may be unreachable)"
   fi
-  ok "Devin CLI installed"
 else
   ok "Devin CLI already installed"
 fi
@@ -419,10 +450,11 @@ if ! command -v grok &>/dev/null; then
   info "Installing Grok Build CLI..."
   if $DRY_RUN; then
     skip "[dry-run] curl -fsSL https://x.ai/cli/install.sh | bash"
+  elif curl -fsSL https://x.ai/cli/install.sh | bash; then
+    ok "Grok Build CLI installed"
   else
-    curl -fsSL https://x.ai/cli/install.sh | bash
+    warn "Grok Build CLI install failed — continuing (installer URL may be unreachable)"
   fi
-  ok "Grok Build CLI installed"
 else
   ok "Grok Build CLI already installed"
 fi
@@ -639,6 +671,38 @@ GITLOCAL
   warn "Edit ~/.gitconfig.local with your name and email"
 else
   ok "$HOME/.gitconfig.local already exists"
+fi
+echo ""
+
+# =============================================================================
+# Step 21: Private laptop overlay
+# =============================================================================
+info "Step 21: Private laptop overlay..."
+
+# This must run LAST. Step 1 links this repo's base configs over several paths
+# the private overlay also owns (~/.claude/settings.json, ~/start_tmux_dev and
+# others), so a setup run that stops before this point silently leaves the
+# laptop on the public defaults. Absent ~/fmcevoy the whole step is a no-op and
+# the script stays fully usable on a machine that has no private overlay.
+FMCEVOY_BOOTSTRAP="$HOME/fmcevoy/laptop/bootstrap.sh"
+
+if [[ -x "$FMCEVOY_BOOTSTRAP" ]]; then
+  info "Running private overlay: $FMCEVOY_BOOTSTRAP"
+  if $DRY_RUN; then
+    if "$FMCEVOY_BOOTSTRAP" --dry-run; then
+      ok "Private overlay dry-run complete"
+    else
+      warn "Private overlay bootstrap failed under --dry-run"
+    fi
+  elif "$FMCEVOY_BOOTSTRAP"; then
+    ok "Private overlay applied"
+  else
+    warn "Private overlay bootstrap failed — this laptop may still be on public defaults"
+  fi
+elif [[ -e "$FMCEVOY_BOOTSTRAP" ]]; then
+  warn "$FMCEVOY_BOOTSTRAP exists but is not executable — skipping"
+else
+  skip "No private overlay (~/fmcevoy/laptop/bootstrap.sh not present)"
 fi
 echo ""
 
