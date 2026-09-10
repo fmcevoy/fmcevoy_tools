@@ -119,35 +119,82 @@ SHIM
 }
 
 # ---------------------------------------------------------------------------
-# Seed file — for configs the application rewrites
+# Merge managed JSON — for configs the application rewrites
 # ---------------------------------------------------------------------------
-# A symlink sends every one of those writes into tracked source. `meldr
-# install-hooks` canonicalises ~/.claude/settings.json before writing, which is
-# how meldr's hook block came to be committed to this repo; Claude Code itself
-# rewrites the same file whenever a setting changes. The repo copy is a seed
-# for a fresh machine, not the live config, so an existing file is never
-# overwritten (same contract as mcp.json in Step 19).
-seed_file() {
+# A symlink sends every write by Claude Code (and by `meldr install-hooks`)
+# into tracked source, so this path cannot be linked. Seeding once instead
+# would be worse across several laptops: a change to the managed template
+# would never again reach a machine that already had the file.
+#
+# So merge, the same way Step 19 merges mcp.json — add what the live file
+# lacks, never overwrite what it already has, one level deep so a newly added
+# plugin or marketplace propagates without clobbering a laptop's own choices.
+merge_json_file() {
   local source="$1" target="$2"
-
-  if [[ -f "$target" ]] && [[ ! -L "$target" ]]; then
-    ok "Already present, left alone: $target"
-    return 0
-  fi
-
-  if [[ -e "$target" ]] || [[ -L "$target" ]]; then
-    local backup
-    backup="${target}.backup.$(date +%Y%m%d-%H%M%S)"
-    warn "Unlinking managed symlink $target → $backup"
-    run mv "$target" "$backup"
-  fi
 
   local parent
   parent="$(dirname "$target")"
   [[ -d "$parent" ]] || run mkdir -p "$parent"
-  info "Seeding $source → $target"
-  run cp "$source" "$target"
-  $DRY_RUN || ok "Seeded: $target"
+
+  if [[ ! -e "$target" ]] && [[ ! -L "$target" ]]; then
+    info "Seeding $source → $target"
+    run cp "$source" "$target"
+    $DRY_RUN || ok "Seeded: $target"
+    return 0
+  fi
+
+  # Left by an older setup.sh, which linked this path into the repo. Keep the
+  # content, drop the link, so writes stop reaching tracked source.
+  if [[ -L "$target" ]]; then
+    local backup
+    backup="${target}.backup.$(date +%Y%m%d-%H%M%S)"
+    warn "Unlinking managed symlink $target → $backup"
+    if $DRY_RUN; then
+      skip "[dry-run] materialise $target as a real file"
+    else
+      cp "$target" "$target.materialised"
+      mv "$target" "$backup"
+      mv "$target.materialised" "$target"
+    fi
+  fi
+
+  info "Merging managed keys from $source into $target"
+  if $DRY_RUN; then
+    skip "[dry-run] merge $source → $target"
+    return 0
+  fi
+
+  if python3 - "$source" "$target" <<'MERGE'
+import json, sys
+
+src, dst = sys.argv[1], sys.argv[2]
+with open(src) as f:
+    template = json.load(f)
+with open(dst) as f:
+    live = json.load(f)
+
+added = []
+for key, value in template.items():
+    if key not in live:
+        live[key] = value
+        added.append(key)
+    elif isinstance(value, dict) and isinstance(live[key], dict):
+        for subkey, subvalue in value.items():
+            if subkey not in live[key]:
+                live[key][subkey] = subvalue
+                added.append(f"{key}.{subkey}")
+
+with open(dst, "w") as f:
+    json.dump(live, f, indent=2)
+    f.write("\n")
+
+print("added: " + ", ".join(added) if added else "already up to date")
+MERGE
+  then
+    ok "Merged: $target"
+  else
+    warn "Could not merge $source into $target — left as-is"
+  fi
 }
 
 # =============================================================================
@@ -166,7 +213,7 @@ link_file "$SCRIPT_DIR/configs/ghostty/config"      "$HOME/.config/ghostty/confi
 link_file "$SCRIPT_DIR/configs/starship.toml"       "$HOME/.config/starship.toml"
 link_file "$SCRIPT_DIR/configs/meldr_prompt.sh"    "$HOME/.config/meldr_prompt.sh"
 link_file "$SCRIPT_DIR/configs/completions.zsh"    "$HOME/.completions.zsh"
-seed_file "$SCRIPT_DIR/configs/claude/settings.json"                     "$HOME/.claude/settings.json"
+merge_json_file "$SCRIPT_DIR/configs/claude/settings.json"               "$HOME/.claude/settings.json"
 link_file "$SCRIPT_DIR/configs/claude/statusline-command.sh"             "$HOME/.claude/statusline-command.sh"
 link_file "$SCRIPT_DIR/cli-upgrades"                          "$HOME/cli-upgrades"
 
